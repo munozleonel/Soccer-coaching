@@ -402,7 +402,25 @@
     transform: translateY(-3px);
   }
 
-  .formation-title {
+  
+/* ===== FORMATION SELECTION, DRAG & RESET ===== */
+.formation-card.selectable { cursor: pointer; }
+.formation-card.selected {
+  border-color: rgba(184,240,38,0.75);
+  box-shadow: 0 10px 26px rgba(184,240,38,0.18);
+}
+.formation-card.selected .formation-title {
+  background: rgba(184,240,38,0.14);
+}
+.formation-reset {
+  margin-top: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.player-dot { touch-action: none; }
+.player-dot.dragging { opacity: 0.9; }
+.player-dot.dragging .player-tooltip { display: none !important; }
+.formation-title {
     background: rgba(184,240,38,0.08);
     padding: 12px 16px;
     font-family: 'Bebas Neue', cursive;
@@ -779,13 +797,13 @@
 <main>
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-eyebrow">Coaching Platform</div>
+    <div class="hero-eyebrow">AI-Powered Coaching Platform</div>
     <h1>COACH<br><span>SMARTER</span></h1>
     <p class="hero-desc">Plan training sessions, master game tactics, and track individual player progress — all in one place. Enter your team details to get started.</p>
     <div class="hero-pills">
-      <span class="pill">⚡ Formation Builder</span>
+      <span class="pill">⚡ AI Formation Builder</span>
       <span class="pill">📋 10-Week Training Plan</span>
-      <span class="pill">🎯 Coaching Insights</span>
+      <span class="pill">🎯 Tactical Analysis</span>
     </div>
   </section>
 
@@ -886,7 +904,8 @@
 
     <!-- Content -->
     <div class="section-content" id="formationContent">
-      <div class="formations-grid" id="formationsGrid"></div>
+      <p id="formationHint" style="color:var(--text-muted);margin:0 0 14px;font-size:0.9rem">Click a formation to select it. Drag players to adjust their positions. Use Reset to revert.</p>
+<div class="formations-grid" id="formationsGrid"></div>
     </div>
   </section>
 
@@ -937,26 +956,29 @@ document.getElementById('gender').addEventListener('change', function() {
 // ===== TEAM DATA =====
 let teamData = null;
 
-// ===== PROFILE STORAGE (localStorage + JSON import/export) =====
-const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v1';
-let lastFormations = null;     // array of 3 formation objects
-let lastTrainingWeeks = null;  // array of 10 week objects
+// ===== PROFILE + FORMATION CUSTOMISATION (localStorage + JSON import/export) =====
+const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v3';
+let lastFormations = null;       // array of 3 formation objects
+let lastTrainingWeeks = null;    // array of 10 week objects
+let selectedFormation = null;    // formation string (e.g., "1-4-3-3")
+let formationOverrides = {};     // { [formationStr]: [ {x, y}, ... ] } positions in %
 
 function buildProfileObject() {
   return {
-    version: 1,
+    version: 3,
     savedAt: new Date().toISOString(),
     team: teamData,
     formations: lastFormations,
-    trainingWeeks: lastTrainingWeeks
+    trainingWeeks: lastTrainingWeeks,
+    selectedFormation,
+    formationOverrides
   };
 }
 
 function saveProfileToStorage() {
   try {
     if (!teamData) return;
-    const profile = buildProfileObject();
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(buildProfileObject()));
     const dl = document.getElementById('downloadBtn');
     if (dl) dl.disabled = false;
   } catch (e) {
@@ -989,7 +1011,7 @@ function downloadProfile() {
   const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
-  const safeName = (teamData.teamName || 'team').replace(/[^a-z0-9\-\_]+/gi, '_');
+  const safeName = (teamData.teamName || 'team').replace(/[^a-z0-9\-_]+/gi, '_');
   const stamp = new Date().toISOString().slice(0, 10);
   const filename = `pitchperfect_${safeName}_${stamp}.json`;
 
@@ -1033,6 +1055,8 @@ function renderFormationsFromData(formations) {
   const grid = document.getElementById('formationsGrid');
   grid.innerHTML = (formations || []).map((f, i) => renderFormationCard(f, i)).join('');
   document.getElementById('formationContent').classList.add('visible');
+  wireFormationInteractions();
+  applySelectedFormationUI();
 }
 
 function renderTrainingFromData(weeks) {
@@ -1067,19 +1091,18 @@ function renderTrainingFromData(weeks) {
 
 async function handleProfileUpload(file) {
   try {
-    const text = await file.text();
-    const profile = JSON.parse(text);
+    const txt = await file.text();
+    const profile = JSON.parse(txt);
 
     if (!profile || typeof profile !== 'object' || !profile.team) {
-      throw new Error('Invalid profile file: missing team');
-    }
-    if (!profile.team.teamName || !profile.team.onField || !profile.team.squadSize || !profile.team.ageGroup || !profile.team.gender) {
-      throw new Error('Invalid team data inside profile');
+      throw new Error('Invalid profile file.');
     }
 
     teamData = profile.team;
     lastFormations = profile.formations || null;
     lastTrainingWeeks = profile.trainingWeeks || null;
+    selectedFormation = profile.selectedFormation || null;
+    formationOverrides = profile.formationOverrides || {};
 
     applyTeamToUI(teamData);
 
@@ -1100,7 +1123,7 @@ async function handleProfileUpload(file) {
     saveProfileToStorage();
   } catch (e) {
     console.error('Profile upload failed:', e);
-    alert('Could not load that profile file. Please ensure it is a valid Pitch Perfect JSON export.');
+    alert('Could not load that profile file. Please ensure it is a valid Pitch Perfect export.');
   }
 }
 
@@ -1109,6 +1132,8 @@ function resetTeam() {
   teamData = null;
   lastFormations = null;
   lastTrainingWeeks = null;
+  selectedFormation = null;
+  formationOverrides = {};
 
   ['teamName','squadSize','onField','numFemales','numMales'].forEach(id => {
     const el = document.getElementById(id);
@@ -1132,6 +1157,141 @@ function resetTeam() {
 
   const dl = document.getElementById('downloadBtn');
   if (dl) dl.disabled = true;
+}
+
+function setSelectedFormation(formationStr) {
+  selectedFormation = formationStr;
+  saveProfileToStorage();
+  applySelectedFormationUI();
+}
+
+function applySelectedFormationUI() {
+  const cards = document.querySelectorAll('.formation-card');
+  cards.forEach(card => {
+    const f = card.getAttribute('data-formation');
+    card.classList.toggle('selected', !!selectedFormation && f === selectedFormation);
+  });
+}
+
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
+
+function computeDefaultDotPositions(formationStr) {
+  const parts = (formationStr || '').split('-').map(Number);
+  const totalRows = parts.length;
+  const positions = [];
+  parts.forEach((count, rowIndex) => {
+    const y = 85 - (rowIndex / (totalRows - 1)) * 70;
+    for (let i = 0; i < count; i++) {
+      const x = count === 1 ? 50 : 15 + (i / (count - 1)) * 70;
+      positions.push({ x, y });
+    }
+  });
+  return positions;
+}
+
+function resetFormationPositions(formationStr) {
+  // Remove saved override
+  if (formationOverrides && formationOverrides[formationStr]) {
+    delete formationOverrides[formationStr];
+  }
+
+  // Update DOM immediately if card exists
+  const cards = document.querySelectorAll('.formation-card');
+  let card = null;
+  cards.forEach(c => { if (c.getAttribute('data-formation') === formationStr) card = c; });
+  if (card) {
+    const dots = card.querySelectorAll('.player-dot');
+    const defaults = computeDefaultDotPositions(formationStr);
+    if (defaults.length === dots.length) {
+      dots.forEach((d, idx) => {
+        d.style.left = defaults[idx].x.toFixed(2) + '%';
+        d.style.top = defaults[idx].y.toFixed(2) + '%';
+      });
+    }
+  }
+
+  saveProfileToStorage();
+}
+
+function readCardPositions(cardEl) {
+  const dots = cardEl.querySelectorAll('.player-dot');
+  return Array.from(dots).map(d => ({
+    x: parseFloat(d.style.left) || 50,
+    y: parseFloat(d.style.top) || 50
+  }));
+}
+
+function saveCardOverride(cardEl) {
+  const formationStr = cardEl.getAttribute('data-formation');
+  if (!formationStr) return;
+  formationOverrides[formationStr] = readCardPositions(cardEl);
+  saveProfileToStorage();
+}
+
+function wireFormationInteractions() {
+  const grid = document.getElementById('formationsGrid');
+  if (!grid) return;
+
+  grid.querySelectorAll('.formation-card').forEach(c => c.classList.add('selectable'));
+
+  grid.onclick = (ev) => {
+    const resetBtn = ev.target.closest && ev.target.closest('.formation-reset');
+    if (resetBtn) return;
+    const dot = ev.target.closest && ev.target.closest('.player-dot');
+    if (dot) return;
+    const card = ev.target.closest && ev.target.closest('.formation-card');
+    if (!card) return;
+    const f = card.getAttribute('data-formation');
+    if (f) setSelectedFormation(f);
+  };
+
+  grid.querySelectorAll('.player-dot').forEach(dot => {
+    dot.onpointerdown = (ev) => {
+      ev.preventDefault();
+      const card = dot.closest('.formation-card');
+      const field = dot.closest('.formation-field');
+      if (!card || !field) return;
+
+      const f = card.getAttribute('data-formation');
+      if (f) setSelectedFormation(f);
+
+      dot.classList.add('dragging');
+      dot.setPointerCapture(ev.pointerId);
+
+      const rect = field.getBoundingClientRect();
+      const dotRect = dot.getBoundingClientRect();
+      const halfW = dotRect.width / 2;
+      const halfH = dotRect.height / 2;
+
+      const move = (e) => {
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const cx = clamp(x, halfW, rect.width - halfW);
+        const cy = clamp(y, halfH, rect.height - halfH);
+
+        const px = (cx / rect.width) * 100;
+        const py = (cy / rect.height) * 100;
+
+        dot.style.left = px.toFixed(2) + '%';
+        dot.style.top = py.toFixed(2) + '%';
+      };
+
+      const up = () => {
+        dot.classList.remove('dragging');
+        dot.onpointermove = null;
+        dot.onpointerup = null;
+        dot.onpointercancel = null;
+        saveCardOverride(card);
+      };
+
+      dot.onpointermove = move;
+      dot.onpointerup = up;
+      dot.onpointercancel = up;
+    };
+  });
 }
 
 
@@ -1268,11 +1428,22 @@ function renderFormationCard(f, index) {
     `;
   }).join('');
 
-  const strengthTags = f.strengths.map(s => `<span class="sw-tag strength">✓ ${s}</span>`).join('');
+    // Apply saved overrides (if any)
+  const override = (typeof formationOverrides !== 'undefined' && formationOverrides) ? formationOverrides[f.formation] : null;
+  if (override && Array.isArray(override) && override.length === positions.length) {
+    override.forEach((o, idx) => {
+      if (o && typeof o.x === 'number' && typeof o.y === 'number') {
+        positions[idx].x = o.x;
+        positions[idx].y = o.y;
+      }
+    });
+  }
+
+const strengthTags = f.strengths.map(s => `<span class="sw-tag strength">✓ ${s}</span>`).join('');
   const weaknessTags = f.weaknesses.map(w => `<span class="sw-tag weakness">✗ ${w}</span>`).join('');
 
   return `
-    <div class="formation-card">
+    <div class="formation-card" data-formation="${f.formation}">
       <div class="formation-title">${f.formation}</div>
       <div class="formation-field">
         <div class="field-marking line-center"></div>
@@ -1610,12 +1781,14 @@ async function generateFormations() {
     await sleep(600);
 
     const formations = pickOfflineFormations(onField, ageGroup);
- lastFormations = formations;
- saveProfileToStorage();
+    lastFormations = formations;
+    saveProfileToStorage();
 
     document.getElementById("formationLoader").classList.remove("visible");
     const grid = document.getElementById("formationsGrid");
     grid.innerHTML = formations.map((f, i) => renderFormationCard(f, i)).join("");
+    wireFormationInteractions();
+    applySelectedFormationUI();
     document.getElementById("formationContent").classList.add("visible");
   } catch (e) {
     console.error("Offline formation generation failed:", e);
@@ -1640,8 +1813,8 @@ async function generateTraining() {
     await sleep(900);
 
     const parsed = { weeks: buildOfflineWeeks(ageGroup) };
- lastTrainingWeeks = parsed.weeks;
- saveProfileToStorage();
+    lastTrainingWeeks = parsed.weeks;
+    saveProfileToStorage();
 
     document.getElementById("trainingLoader").classList.remove("visible");
 
@@ -1786,6 +1959,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   teamData = saved.team;
   lastFormations = saved.formations || null;
   lastTrainingWeeks = saved.trainingWeeks || null;
+  selectedFormation = saved.selectedFormation || null;
+  formationOverrides = saved.formationOverrides || {};
 
   applyTeamToUI(teamData);
 
