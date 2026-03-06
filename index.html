@@ -845,11 +845,13 @@
 
     <div class="error-msg" id="teamError">Please fill in all required fields before submitting.</div>
 
-    <div style="margin-top: 24px;">
-      <button class="btn" onclick="submitTeam()">
-        ⚽ Build My Program
-      </button>
-    </div>
+    <div style="margin-top: 24px; display:flex; flex-wrap:wrap; gap:10px;">
+  <button class="btn" onclick="submitTeam()">⚽ Build My Program</button>
+  <button class="btn btn-ghost" id="downloadBtn" onclick="downloadProfile()" disabled>⬇ Download Profile</button>
+  <button class="btn btn-ghost" onclick="document.getElementById('uploadInput').click()">⬆ Upload Profile</button>
+  <button class="btn btn-ghost" onclick="resetTeam()">♻ Reset</button>
+  <input type="file" id="uploadInput" accept="application/json" style="display:none" />
+</div>
   </section>
 
   <!-- SECTION 2: FORMATION -->
@@ -935,6 +937,204 @@ document.getElementById('gender').addEventListener('change', function() {
 // ===== TEAM DATA =====
 let teamData = null;
 
+// ===== PROFILE STORAGE (localStorage + JSON import/export) =====
+const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v1';
+let lastFormations = null;     // array of 3 formation objects
+let lastTrainingWeeks = null;  // array of 10 week objects
+
+function buildProfileObject() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    team: teamData,
+    formations: lastFormations,
+    trainingWeeks: lastTrainingWeeks
+  };
+}
+
+function saveProfileToStorage() {
+  try {
+    if (!teamData) return;
+    const profile = buildProfileObject();
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    const dl = document.getElementById('downloadBtn');
+    if (dl) dl.disabled = false;
+  } catch (e) {
+    console.warn('Could not save profile:', e);
+  }
+}
+
+function loadProfileFromStorage() {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Could not load profile:', e);
+    return null;
+  }
+}
+
+function clearProfileStorage() {
+  try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch (e) {}
+}
+
+function downloadProfile() {
+  if (!teamData) {
+    alert('Please build or upload a team profile first.');
+    return;
+  }
+  saveProfileToStorage();
+  const profile = buildProfileObject();
+  const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const safeName = (teamData.teamName || 'team').replace(/[^a-z0-9\-\_]+/gi, '_');
+  const stamp = new Date().toISOString().slice(0, 10);
+  const filename = `pitchperfect_${safeName}_${stamp}.json`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applyTeamToUI(team) {
+  document.getElementById('teamName').value = team.teamName || '';
+  document.getElementById('squadSize').value = team.squadSize ?? '';
+  document.getElementById('onField').value = team.onField ?? '';
+  document.getElementById('gender').value = team.gender || '';
+  document.getElementById('ageGroup').value = team.ageGroup || '';
+
+  const mf = document.getElementById('mixedFields');
+  mf.classList.toggle('visible', team.gender === 'mixed');
+  if (team.gender === 'mixed') {
+    document.getElementById('numFemales').value = team.numFemales ?? '';
+    document.getElementById('numMales').value = team.numMales ?? '';
+  } else {
+    document.getElementById('numFemales').value = '';
+    document.getElementById('numMales').value = '';
+  }
+
+  document.getElementById('badgeTeamName').textContent = team.teamName || '—';
+  document.getElementById('badgeTeamInfo').textContent = `${team.onField}v${team.onField} · ${team.squadSize} players · ${team.ageGroup} · ${team.genderDetail}`;
+  document.getElementById('formationBadge').classList.add('visible');
+
+  const dl = document.getElementById('downloadBtn');
+  if (dl) dl.disabled = false;
+}
+
+function renderFormationsFromData(formations) {
+  document.getElementById('formationLocked').classList.remove('visible');
+  document.getElementById('formationLoader').classList.remove('visible');
+  const grid = document.getElementById('formationsGrid');
+  grid.innerHTML = (formations || []).map((f, i) => renderFormationCard(f, i)).join('');
+  document.getElementById('formationContent').classList.add('visible');
+}
+
+function renderTrainingFromData(weeks) {
+  document.getElementById('trainingLocked').classList.remove('visible');
+  document.getElementById('trainingLoader').classList.remove('visible');
+
+  const nav = document.getElementById('weeksNav');
+  const container = document.getElementById('weeksContainer');
+  nav.innerHTML = '';
+  container.innerHTML = '';
+
+  (weeks || []).forEach((w, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'week-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = `W${w.week}`;
+    btn.onclick = () => {
+      document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.week-content').forEach(c => c.classList.remove('visible'));
+      btn.classList.add('active');
+      document.getElementById('week-' + w.week).classList.add('visible');
+    };
+    nav.appendChild(btn);
+    container.insertAdjacentHTML('beforeend', renderWeek(w, w.week));
+  });
+
+  if (weeks && weeks.length) {
+    const first = document.getElementById('week-' + weeks[0].week);
+    if (first) first.classList.add('visible');
+  }
+  document.getElementById('trainingContent').classList.add('visible');
+}
+
+async function handleProfileUpload(file) {
+  try {
+    const text = await file.text();
+    const profile = JSON.parse(text);
+
+    if (!profile || typeof profile !== 'object' || !profile.team) {
+      throw new Error('Invalid profile file: missing team');
+    }
+    if (!profile.team.teamName || !profile.team.onField || !profile.team.squadSize || !profile.team.ageGroup || !profile.team.gender) {
+      throw new Error('Invalid team data inside profile');
+    }
+
+    teamData = profile.team;
+    lastFormations = profile.formations || null;
+    lastTrainingWeeks = profile.trainingWeeks || null;
+
+    applyTeamToUI(teamData);
+
+    if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
+      renderFormationsFromData(lastFormations);
+    } else {
+      unlockSection('formation');
+      await generateFormations();
+    }
+
+    if (lastTrainingWeeks && Array.isArray(lastTrainingWeeks) && lastTrainingWeeks.length) {
+      renderTrainingFromData(lastTrainingWeeks);
+    } else {
+      unlockSection('training');
+      await generateTraining();
+    }
+
+    saveProfileToStorage();
+  } catch (e) {
+    console.error('Profile upload failed:', e);
+    alert('Could not load that profile file. Please ensure it is a valid Pitch Perfect JSON export.');
+  }
+}
+
+function resetTeam() {
+  clearProfileStorage();
+  teamData = null;
+  lastFormations = null;
+  lastTrainingWeeks = null;
+
+  ['teamName','squadSize','onField','numFemales','numMales'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('gender').value = '';
+  document.getElementById('ageGroup').value = '';
+  document.getElementById('mixedFields').classList.remove('visible');
+
+  document.getElementById('formationBadge').classList.remove('visible');
+
+  document.getElementById('formationLocked').classList.add('visible');
+  document.getElementById('trainingLocked').classList.add('visible');
+  document.getElementById('formationLoader').classList.remove('visible');
+  document.getElementById('trainingLoader').classList.remove('visible');
+  document.getElementById('formationContent').classList.remove('visible');
+  document.getElementById('trainingContent').classList.remove('visible');
+  document.getElementById('formationsGrid').innerHTML = '';
+  document.getElementById('weeksNav').innerHTML = '';
+  document.getElementById('weeksContainer').innerHTML = '';
+
+  const dl = document.getElementById('downloadBtn');
+  if (dl) dl.disabled = true;
+}
+
+
 // ===== SUBMIT TEAM =====
 async function submitTeam() {
   const teamName = document.getElementById('teamName').value.trim();
@@ -964,7 +1164,8 @@ async function submitTeam() {
 
   errEl.classList.remove('visible');
 
-  teamData = { teamName, squadSize: +squadSize, onField: +onField, gender, genderDetail, ageGroup };
+  teamData = { teamName, squadSize: +squadSize, onField: +onField, gender, genderDetail, ageGroup, numFemales: (gender === 'mixed' ? +document.getElementById('numFemales').value : null), numMales: (gender === 'mixed' ? +document.getElementById('numMales').value : null) };
+ saveProfileToStorage();
 
   // Update badge
   document.getElementById('badgeTeamName').textContent = teamName;
@@ -1409,6 +1610,8 @@ async function generateFormations() {
     await sleep(600);
 
     const formations = pickOfflineFormations(onField, ageGroup);
+ lastFormations = formations;
+ saveProfileToStorage();
 
     document.getElementById("formationLoader").classList.remove("visible");
     const grid = document.getElementById("formationsGrid");
@@ -1437,6 +1640,8 @@ async function generateTraining() {
     await sleep(900);
 
     const parsed = { weeks: buildOfflineWeeks(ageGroup) };
+ lastTrainingWeeks = parsed.weeks;
+ saveProfileToStorage();
 
     document.getElementById("trainingLoader").classList.remove("visible");
 
@@ -1563,6 +1768,41 @@ function renderWeek(weekData, weekNum) {
     </div>
   `;
 }
+
+// ===== Wire up upload + auto-restore =====
+window.addEventListener('DOMContentLoaded', async () => {
+  const up = document.getElementById('uploadInput');
+  if (up) {
+    up.addEventListener('change', async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (file) await handleProfileUpload(file);
+      ev.target.value = '';
+    });
+  }
+
+  const saved = loadProfileFromStorage();
+  if (!saved || !saved.team) return;
+
+  teamData = saved.team;
+  lastFormations = saved.formations || null;
+  lastTrainingWeeks = saved.trainingWeeks || null;
+
+  applyTeamToUI(teamData);
+
+  if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
+    renderFormationsFromData(lastFormations);
+  } else {
+    unlockSection('formation');
+    await generateFormations();
+  }
+
+  if (lastTrainingWeeks && Array.isArray(lastTrainingWeeks) && lastTrainingWeeks.length) {
+    renderTrainingFromData(lastTrainingWeeks);
+  } else {
+    unlockSection('training');
+    await generateTraining();
+  }
+});
 
 </script>
 </body>
