@@ -779,13 +779,13 @@
 <main>
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-eyebrow">AI-Powered Coaching Platform</div>
+    <div class="hero-eyebrow">Coaching Platform</div>
     <h1>COACH<br><span>SMARTER</span></h1>
     <p class="hero-desc">Plan training sessions, master game tactics, and track individual player progress — all in one place. Enter your team details to get started.</p>
     <div class="hero-pills">
-      <span class="pill">⚡ AI Formation Builder</span>
+      <span class="pill">⚡ Formation Builder</span>
       <span class="pill">📋 10-Week Training Plan</span>
-      <span class="pill">🎯 Tactical Analysis</span>
+      <span class="pill">🎯 Coaching Insights</span>
     </div>
   </section>
 
@@ -1091,53 +1091,385 @@ function renderFormationCard(f, index) {
   `;
 }
 
-// ===== GENERATE FORMATIONS VIA API =====
-async function generateFormations() {
-  const { teamName, onField, squadSize, genderDetail, ageGroup } = teamData;
-  const prompt = `You are a soccer coaching expert. A coach has a ${ageGroup} ${genderDetail} team called "${teamName}" playing ${onField}v${onField} soccer.
+// ================================
+// OFFLINE (NO-AI) PROGRAM GENERATOR
+// ================================
 
-Recommend exactly 3 suitable formations. For ${onField} players including goalkeeper, the formation numbers must add up to ${onField}.
-Format (from goalkeeper row to attacking row), e.g. for 11 players: 1-4-3-3
+// Small helper to simulate "analysis" delay so your loaders feel natural.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-Respond ONLY with valid JSON (no markdown, no extra text):
-{
-  "formations": [
-    {
-      "formation": "1-3-2-2",
-      "summary": "2-3 sentence tactical description",
-      "strengths": ["strength1", "strength2"],
-      "weaknesses": ["weakness1", "weakness2"]
-    }
-  ]
-}`;
+function normaliseAge(ageGroup) {
+  const a = (ageGroup || "").toLowerCase();
+  if (a.includes("under 8")) return "u8";
+  if (a.includes("under 10")) return "u10";
+  if (a.includes("under 12")) return "u12";
+  if (a.includes("under 14")) return "u14";
+  if (a.includes("under 16")) return "u16";
+  if (a.includes("under 18")) return "u18";
+  return "senior";
+}
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content.map(b => b.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    document.getElementById('formationLoader').classList.remove('visible');
-    const grid = document.getElementById('formationsGrid');
-    grid.innerHTML = parsed.formations.map((f, i) => renderFormationCard(f, i)).join('');
-    document.getElementById('formationContent').classList.add('visible');
-  } catch (e) {
-    document.getElementById('formationLoader').classList.remove('visible');
-    document.getElementById('formationsGrid').innerHTML = `<p style="color:var(--text-muted);grid-column:1/-1">Failed to generate formations. Please try again.</p>`;
-    document.getElementById('formationContent').classList.add('visible');
+function ageNote(ageKey) {
+  switch (ageKey) {
+    case "u8":
+    case "u10":
+      return "Keep roles simple, encourage dribbling, and focus on spacing + confidence.";
+    case "u12":
+    case "u14":
+      return "Introduce shape, support angles, and basic pressing/recovery habits.";
+    case "u16":
+    case "u18":
+      return "Add tactical triggers, rotations, and structured build-up/press patterns.";
+    default:
+      return "Use match-model coaching, refine principles, and adapt to opponent strengths.";
   }
 }
 
-// ===== GENERATE TRAINING PLAN =====
+// --- Formation templates by on-field size (includes GK as first number = 1) ---
+const FORMATIONS_BY_SIZE = {
+  5: [
+    {
+      formation: "1-2-1-1",
+      summary:
+        "Balanced with two defenders, one central link, and one forward. Great for simple spacing and quick transitions.",
+      strengths: ["Clear roles", "Good balance", "Easy to coach"],
+      weaknesses: ["Midfielder can be overloaded", "Needs wide support in attack"],
+    },
+    {
+      formation: "1-1-2-1",
+      summary:
+        "One defender anchors, two mids provide width, and one forward stays high. Encourages passing lanes and width.",
+      strengths: ["Natural width", "Simple passing triangles", "Supports counterattacks"],
+      weaknesses: ["Single defender can be isolated", "Requires midfield tracking back"],
+    },
+    {
+      formation: "1-1-1-2",
+      summary:
+        "Two forwards stay high and press early. Useful if you want more goals and aggressive defending from the front.",
+      strengths: ["Strong high press", "More scoring presence", "Quick counters"],
+      weaknesses: ["Midfield can be outnumbered", "Space behind midfield if possession lost"],
+    },
+  ],
+  6: [
+    {
+      formation: "1-2-2-1",
+      summary:
+        "Two defenders, two mids, one forward. Very stable and ideal for building out from the back with support.",
+      strengths: ["Stable shape", "Good support lines", "Easy build-up play"],
+      weaknesses: ["May lack a second attacker", "Needs midfield runners to join attack"],
+    },
+    {
+      formation: "1-3-1-1",
+      summary:
+        "Three across the back provides security; one central mid links to a forward. Great for defensive solidity.",
+      strengths: ["Hard to break down", "Strong defensive coverage", "Good for learning shape"],
+      weaknesses: ["Can be flat/slow in attack", "Forward may become isolated"],
+    },
+    {
+      formation: "1-1-3-1",
+      summary:
+        "A single defender with three mids pushes play forward and keeps the ball. Helps dominate possession in small-sided games.",
+      strengths: ["Possession-friendly", "Lots of passing options", "Higher field presence"],
+      weaknesses: ["Single defender vulnerable to counters", "Needs quick recovery runs"],
+    },
+  ],
+  7: [
+    {
+      formation: "1-2-3-1",
+      summary:
+        "A classic 7v7 setup: two defenders, three midfielders, one striker. Great balance for width and central control.",
+      strengths: ["Balanced lines", "Natural width + central support", "Good transitions"],
+      weaknesses: ["Striker can be isolated", "Requires midfield tracking"],
+    },
+    {
+      formation: "1-3-2-1",
+      summary:
+        "Three defenders for solidity with two mids in front. Great if your team needs structure and defensive confidence.",
+      strengths: ["Defensively strong", "Clear build-out shape", "Limits counterattacks"],
+      weaknesses: ["Can lack width in midfield", "Needs fullbacks to support attack"],
+    },
+    {
+      formation: "1-2-2-2",
+      summary:
+        "Two mids and two forwards create more attacking options. Ideal if you want more combination play near goal.",
+      strengths: ["More attacking presence", "Good combinations", "High pressing options"],
+      weaknesses: ["Midfield can be stretched", "Two forwards must defend together"],
+    },
+  ],
+  8: [
+    {
+      formation: "1-3-3-1",
+      summary:
+        "Solid 3-3 block with one striker. Encourages compactness and clear roles while still providing midfield support.",
+      strengths: ["Compact shape", "Strong midfield unit", "Easy to maintain structure"],
+      weaknesses: ["Can lack a second attacker", "Needs wide mids to deliver service"],
+    },
+    {
+      formation: "1-2-3-2",
+      summary:
+        "Two defenders, three mids, two forwards. Good for pressing and creating multiple finishing angles.",
+      strengths: ["More goalscoring options", "Strong press", "Good support around ball"],
+      weaknesses: ["Two defenders can be exposed", "Requires midfield discipline"],
+    },
+    {
+      formation: "1-3-2-2",
+      summary:
+        "Three defenders plus two mids behind two forwards. Good blend of stability and counterattacking threat.",
+      strengths: ["Stable base", "Quick counters", "Two-forward threat"],
+      weaknesses: ["Can get outnumbered in midfield", "Needs mids to stay connected"],
+    },
+  ],
+  9: [
+    {
+      formation: "1-3-3-2",
+      summary:
+        "Common 9v9: three defenders, three mids, two forwards. Offers strong balance and clear progression lanes.",
+      strengths: ["Balanced", "Strong central presence", "Two attackers to combine"],
+      weaknesses: ["Needs wide support in build-up", "Forwards must press together"],
+    },
+    {
+      formation: "1-4-3-1",
+      summary:
+        "Four at the back provides security; three mids link to one striker. Great for organised defending and build-up.",
+      strengths: ["Defensive stability", "Good build-up structure", "Clear roles"],
+      weaknesses: ["Striker isolation risk", "Requires midfield runners"],
+    },
+    {
+      formation: "1-2-4-2",
+      summary:
+        "Two defenders, four mids, two forwards. Great for dominating midfield and playing combination soccer.",
+      strengths: ["Midfield control", "Many passing options", "Two-forward finishing"],
+      weaknesses: ["Space behind mids if possession lost", "Defenders can be exposed wide"],
+    },
+  ],
+  10: [
+    {
+      formation: "1-4-3-2",
+      summary:
+        "Back four + midfield three with two forwards. Strong structure with more attacking presence than a lone striker.",
+      strengths: ["Stable back line", "Good central triangles", "Two attackers to combine"],
+      weaknesses: ["Wide areas depend on fullbacks", "Midfield must cover lots of ground"],
+    },
+    {
+      formation: "1-3-4-2",
+      summary:
+        "Three at the back with four mids gives control and width. Good if your team wants to play possession.",
+      strengths: ["Midfield control", "Width in build-up", "Flexible attacking options"],
+      weaknesses: ["Wing mids must work hard", "Space behind wing mids on turnovers"],
+    },
+    {
+      formation: "1-4-4-1",
+      summary:
+        "Strong defensive organisation and clear wide midfield roles. Useful if your team needs more stability.",
+      strengths: ["Very organised", "Good wide coverage", "Hard to play through"],
+      weaknesses: ["Limited central attacking numbers", "Needs support runs to striker"],
+    },
+  ],
+  11: [
+    {
+      formation: "1-4-3-3",
+      summary:
+        "A modern balanced formation: back four, midfield three, front three. Great for width, pressing, and transitions.",
+      strengths: ["Natural width", "Strong pressing shape", "Good build-up lanes"],
+      weaknesses: ["Needs strong midfield engine", "Wingers must track back"],
+    },
+    {
+      formation: "1-4-4-2",
+      summary:
+        "Classic two-striker system that simplifies attacking roles. Great for direct play and pairing forwards.",
+      strengths: ["Two attackers always present", "Simple roles", "Strong counter threat"],
+      weaknesses: ["Can be outnumbered in midfield", "Requires disciplined wide mids"],
+    },
+    {
+      formation: "1-3-5-2",
+      summary:
+        "Three centre-backs with wingbacks and two forwards. Good for controlling midfield and quick switching wide.",
+      strengths: ["Midfield overload", "Wingback width", "Two-forward combinations"],
+      weaknesses: ["Wingback workload high", "Space behind wingbacks on counters"],
+    },
+  ],
+};
+
+function pickOfflineFormations(onField, ageGroup) {
+  const ageKey = normaliseAge(ageGroup);
+  const base = FORMATIONS_BY_SIZE[onField] || [];
+
+  // Fallback: if onField is something unexpected, generate a safe 3-line shape
+  if (!base.length) {
+    const outfield = Math.max(0, onField - 1);
+    const def = Math.max(2, Math.round(outfield * 0.35));
+    const mid = Math.max(2, Math.round(outfield * 0.35));
+    let att = outfield - def - mid;
+    if (att < 1) att = 1;
+
+    return [
+      {
+        formation: `1-${def}-${mid}-${att}`,
+        summary:
+          "A balanced fallback shape based on your player count. Prioritises structure and simple spacing.",
+        strengths: ["Works for any number", "Balanced", "Easy principles"],
+        weaknesses: ["Not tailored", "Adjust roles based on players"],
+      },
+      {
+        formation: `1-${def + 1}-${mid - 1}-${att}`,
+        summary:
+          "Slightly more defensive variation to build confidence and protect transitions.",
+        strengths: ["More defensive cover", "Safer build-up", "Clear roles"],
+        weaknesses: ["May reduce central creativity", "Needs wide support"],
+      },
+      {
+        formation: `1-${Math.max(2, def - 1)}-${mid}-${att + 1}`,
+        summary:
+          "Slightly more attacking variation with an extra forward presence for finishing and pressing.",
+        strengths: ["More goal threat", "Stronger press", "Quick counters"],
+        weaknesses: ["More space to defend", "Needs recovery runs"],
+      },
+    ];
+  }
+
+  // Add an age-appropriate coaching note to each formation summary
+  const note = ageNote(ageKey);
+  return base.map((f) => ({
+    ...f,
+    summary: `${f.summary} ${note}`,
+  }));
+}
+
+// --- Offline 10-week plan templates ---
+const WEEK_TEMPLATES = [
+  { theme: "Ball Mastery & Confidence", focuses: ["Close control dribbling", "Turns & shielding", "1v1 moves", "Change of pace"], game: "End-zone dribble scores (no passing for first 2 mins)." },
+  { theme: "Passing & Support", focuses: ["Inside-foot passing", "First touch direction", "Support angles (triangles)", "One-touch + two-touch choices"], game: "3-pass rule before scoring." },
+  { theme: "Receiving & Turning", focuses: ["Open body shape", "Scan before receive", "Turn out of pressure", "Protect then play"], game: "Score only after a turn or switch." },
+  { theme: "Attacking Principles", focuses: ["Width & depth", "Overlap/underlap basics", "Finishing technique", "Final pass timing"], game: "Wide channel bonus point for crosses/cutbacks." },
+  { theme: "Defending 1v1 & Delay", focuses: ["Jockeying", "Tackling timing", "Delay + angle away", "Defend as a unit"], game: "Win it back in 6 seconds for a bonus point." },
+  { theme: "Team Defending Shape", focuses: ["Compact lines", "Press triggers", "Cover & balance", "Recover runs"], game: "Coach calls 'press' triggers; goals count double after a regain." },
+  { theme: "Possession & Switching", focuses: ["Rondos", "Third-man concept", "Switch play", "Patience vs penetration"], game: "Must switch sides before scoring." },
+  { theme: "Set Plays & Restarts", focuses: ["Corners roles", "Free kick options", "Throw-ins to keep ball", "Transition after restart"], game: "Start every attack from a restart." },
+  { theme: "Game Model & Shape", focuses: ["Build-up patterns", "Midfield rotations", "Wide play patterns", "Pressing structure"], game: "Play in your chosen formation; coach frozen moments." },
+  { theme: "Review & Match Prep", focuses: ["Strengths review", "Weakness fixes", "Speed of play", "Match scenarios"], game: "Full mini match with match objectives + scoring rules." },
+];
+
+function sessionDescription(focus, ageGroup) {
+  const ageKey = normaliseAge(ageGroup);
+
+  // Adjust language/complexity slightly by age
+  const short = (text) => text;
+  const medium = (text) => text + " Add a coaching point every 2–3 reps and rotate roles quickly.";
+  const advanced = (text) => text + " Add constraints (touch limits/press triggers) and demand scanning + communication.";
+
+  if (ageKey === "u8" || ageKey === "u10") {
+    return short(`Fun, high-rep practice for "${focus}". Keep it simple, demonstrate once, then let them play with lots of ball contacts.`);
+  }
+  if (ageKey === "u12" || ageKey === "u14") {
+    return medium(`Progressive practice for "${focus}". Start unopposed, then add a defender and finish with a small-sided game to apply it.`);
+  }
+  return advanced(`High-intensity practice for "${focus}". Start with a technical pattern, move to opposed, then apply in a conditioned game.`);
+}
+
+function gameTipsForTheme(theme) {
+  const t = theme.toLowerCase();
+  if (t.includes("ball mastery")) return ["Encourage bravery on the ball", "Praise attempts, not perfection", "Keep spacing so dribblers have options"];
+  if (t.includes("passing")) return ["Open your body to see two options", "Pass and move immediately", "Use the safe pass when pressured"];
+  if (t.includes("receiving")) return ["Scan before the ball arrives", "First touch into space", "Shield first if under pressure"];
+  if (t.includes("attacking")) return ["Create width early", "Attack the far post", "Shoot when balanced"];
+  if (t.includes("defending 1v1")) return ["Slow the attacker first", "Show them away from goal", "Win it when they take a big touch"];
+  if (t.includes("team defending")) return ["Stay compact", "Press together, not alone", "Recover quickly after losing it"];
+  if (t.includes("possession")) return ["Be patient", "Switch when crowded", "Play forward when you can"];
+  if (t.includes("set plays")) return ["Quick restarts catch teams out", "Know your role", "Be ready for second balls"];
+  if (t.includes("shape")) return ["Keep distances between lines", "Communicate", "Recognise pressing triggers"];
+  return ["Play with intensity", "Communicate", "Reflect on what worked"];
+}
+
+function buildOfflineWeeks(ageGroup) {
+  return WEEK_TEMPLATES.map((tpl, i) => {
+    const week = i + 1;
+    return {
+      week,
+      theme: tpl.theme,
+      mini_sessions: tpl.focuses.map((f) => ({
+        focus: f,
+        description: sessionDescription(f, ageGroup),
+      })),
+      game_description: tpl.game,
+      game_tips: gameTipsForTheme(tpl.theme),
+    };
+  });
+}
+
+// ===== GENERATE FORMATIONS (OFFLINE) =====
+async function generateFormations() {
+  try {
+    const { onField, ageGroup } = teamData;
+
+    // Clear previous results (important if user re-submits)
+    document.getElementById("formationContent").classList.remove("visible");
+    document.getElementById("formationsGrid").innerHTML = "";
+
+    // Simulate analysis time for the loader
+    await sleep(600);
+
+    const formations = pickOfflineFormations(onField, ageGroup);
+
+    document.getElementById("formationLoader").classList.remove("visible");
+    const grid = document.getElementById("formationsGrid");
+    grid.innerHTML = formations.map((f, i) => renderFormationCard(f, i)).join("");
+    document.getElementById("formationContent").classList.add("visible");
+  } catch (e) {
+    console.error("Offline formation generation failed:", e);
+    document.getElementById("formationLoader").classList.remove("visible");
+    document.getElementById("formationsGrid").innerHTML =
+      `<p style="color:var(--text-muted);grid-column:1/-1">Failed to generate formations. Please try again.</p>`;
+    document.getElementById("formationContent").classList.add("visible");
+  }
+}
+
+// ===== GENERATE TRAINING PLAN (OFFLINE) =====
+async function generateTraining() {
+  try {
+    const { ageGroup } = teamData;
+
+    // Clear previous results (important if user re-submits)
+    document.getElementById("trainingContent").classList.remove("visible");
+    document.getElementById("weeksNav").innerHTML = "";
+    document.getElementById("weeksContainer").innerHTML = "";
+
+    // Simulate build time for loader
+    await sleep(900);
+
+    const parsed = { weeks: buildOfflineWeeks(ageGroup) };
+
+    document.getElementById("trainingLoader").classList.remove("visible");
+
+    const nav = document.getElementById("weeksNav");
+    const container = document.getElementById("weeksContainer");
+
+    parsed.weeks.forEach((w, i) => {
+      const btn = document.createElement("button");
+      btn.className = "week-btn" + (i === 0 ? " active" : "");
+      btn.textContent = `W${w.week}`;
+      btn.onclick = () => {
+        document.querySelectorAll(".week-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".week-content").forEach((c) => c.classList.remove("visible"));
+        btn.classList.add("active");
+        document.getElementById("week-" + w.week).classList.add("visible");
+      };
+      nav.appendChild(btn);
+      container.insertAdjacentHTML("beforeend", renderWeek(w, w.week));
+    });
+
+    // Show first week
+    document.getElementById("week-1").classList.add("visible");
+    document.getElementById("trainingContent").classList.add("visible");
+  } catch (e) {
+    console.error("Offline training generation failed:", e);
+    document.getElementById("trainingLoader").classList.remove("visible");
+    document.getElementById("trainingContent").innerHTML =
+      `<p style="color:var(--text-muted)">Failed to generate training plan. Please try again.</p>`;
+    document.getElementById("trainingContent").classList.add("visible");
+  }
+};
+
+// ===== VIDEO LIBRARY (used by training plan links) =====
 const VIDEO_LIBRARY = {
   dribbling: [
     { label: '▶ Dribbling Drills', url: 'https://www.youtube.com/results?search_query=soccer+dribbling+drills+training' },
@@ -1232,76 +1564,6 @@ function renderWeek(weekData, weekNum) {
   `;
 }
 
-async function generateTraining() {
-  const { teamName, onField, squadSize, genderDetail, ageGroup } = teamData;
-  const prompt = `You are an elite soccer coach. Create a 10-week training plan for a ${ageGroup} ${genderDetail} team called "${teamName}" playing ${onField}v${onField}.
-
-Each session is 60 minutes total: 4 x 10-minute mini-sessions then a 10-minute mini-match.
-
-Respond ONLY with valid JSON (no markdown):
-{
-  "weeks": [
-    {
-      "week": 1,
-      "theme": "Short theme title",
-      "mini_sessions": [
-        { "focus": "Session focus name", "description": "2 sentence description of what players do and how" },
-        { "focus": "...", "description": "..." },
-        { "focus": "...", "description": "..." },
-        { "focus": "...", "description": "..." }
-      ],
-      "game_description": "1-2 sentence description of the mini-match scenario",
-      "game_tips": ["tip1", "tip2", "tip3"]
-    }
-  ]
-}
-
-Make each week progressively build skills. Vary focus: dribbling, passing, shooting, defending, set plays, fitness, possession, formation shape, teamwork.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content.map(b => b.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    document.getElementById('trainingLoader').classList.remove('visible');
-
-    const nav = document.getElementById('weeksNav');
-    const container = document.getElementById('weeksContainer');
-
-    parsed.weeks.forEach((w, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'week-btn' + (i === 0 ? ' active' : '');
-      btn.textContent = `W${w.week}`;
-      btn.onclick = () => {
-        document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.week-content').forEach(c => c.classList.remove('visible'));
-        btn.classList.add('active');
-        document.getElementById('week-' + w.week).classList.add('visible');
-      };
-      nav.appendChild(btn);
-      container.insertAdjacentHTML('beforeend', renderWeek(w, w.week));
-    });
-
-    // Show first week
-    document.getElementById('week-1').classList.add('visible');
-    document.getElementById('trainingContent').classList.add('visible');
-
-  } catch (e) {
-    document.getElementById('trainingLoader').classList.remove('visible');
-    document.getElementById('trainingContent').innerHTML = `<p style="color:var(--text-muted)">Failed to generate training plan. Please try again.</p>`;
-    document.getElementById('trainingContent').classList.add('visible');
-  }
-}
 </script>
 </body>
 </html>
