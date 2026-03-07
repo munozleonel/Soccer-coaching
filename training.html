@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training — Pitch Perfect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --lime: #b8f026;
+      --white: #f5f7f0;
+      --off-white: #e8ede0;
+      --dark: #0d1f15;
+      --border: rgba(184,240,38,0.25);
+      --text-muted: #7a9a80;
+      --panel: rgba(13,31,21,0.85);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px),
+        repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px),
+        radial-gradient(ellipse at 20% 50%, rgba(26,74,46,0.4) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(45,107,69,0.3) 0%, transparent 50%),
+        var(--dark);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      z-index: 10;
+      padding: 0 40px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,31,21,0.9);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      letter-spacing: 3px;
+      color: var(--lime);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    nav { display: flex; gap: 20px; align-items: center; }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--lime); }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 90px;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 10px 0 26px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title h1 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 3rem;
+      letter-spacing: 3px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--lime);
+      color: var(--dark);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #cff540;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(184,240,38,0.25);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--lime);
+      border: 1px solid var(--lime);
+    }
+
+    .btn-ghost:hover { background: rgba(184,240,38,0.1); }
+
+    .section-card {
+      background: rgba(13,31,21,0.7);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 34px;
+      margin-bottom: 26px;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--lime), transparent);
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--lime);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .section-card h2 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+      color: var(--white);
+    }
+
+    .muted { color: var(--text-muted); }
+
+    /* ===== TEAM BANNER ===== */
+    .team-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 20px;
+    }
+
+    .team-banner .name {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--lime);
+    }
+
+    .team-banner .info {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    /* ===== TRAINING PLAN UI ===== */
+    .weeks-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+
+    .week-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .week-btn:hover, .week-btn.active {
+      background: rgba(184,240,38,0.12);
+      border-color: var(--lime);
+      color: var(--lime);
+    }
+
+    .week-content { display: none; }
+    .week-content.visible { display: block; }
+
+    .week-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .week-header h3 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--lime);
+    }
+
+    .week-header .week-theme { font-size: 0.85rem; color: var(--text-muted); }
+
+    .session-timeline { display: flex; flex-direction: column; gap: 12px; }
+
+    .session-block {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+
+    .session-block:hover { border-color: rgba(184,240,38,0.4); }
+
+    .session-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--lime);
+      text-align: center;
+      border-right: 1px solid var(--border);
+      padding-right: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .session-time .mins { font-size: 1.2rem; font-weight: 700; display: block; }
+
+    .session-body h4 { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; color: var(--white); }
+    .session-body p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
+
+    .video-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+    .video-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,0,0,0.1);
+      border: 1px solid rgba(255,0,0,0.3);
+      color: #ff8080;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .video-link:hover { background: rgba(255,0,0,0.2); color: #ffaaaa; }
+
+    .game-block { border-color: rgba(184,240,38,0.3); background: rgba(184,240,38,0.04); }
+    .game-block .session-time { color: #ffd700; border-right-color: rgba(184,240,38,0.3); }
+
+    .tips-list { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tip-tag {
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.25);
+      color: #ffd700;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+    }
+
+    /* ===== PLAYER TRAINING (STEP 4) ===== */
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .skill-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--white);
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.2s, background 0.2s;
+      text-align: left;
+    }
+
+    .skill-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(184,240,38,0.45);
+      background: rgba(184,240,38,0.06);
+    }
+
+    .skill-btn.active {
+      border-color: rgba(184,240,38,0.75);
+      background: rgba(184,240,38,0.10);
+    }
+
+    .skill-btn .skill-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.5px;
+    }
+
+    .skill-btn .skill-icon { font-size: 1.2rem; opacity: 0.9; }
+
+    .stage-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 12px 0 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .stage-label {
+      font-family: 'Space Mono', monospace;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .stage-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .stage-chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stage-chip:hover { border-color: rgba(184,240,38,0.5); color: var(--lime); }
+
+    .stage-chip.active {
+      border-color: var(--lime);
+      color: var(--lime);
+      background: rgba(184,240,38,0.12);
+    }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .level-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      padding: 16px;
+    }
+
+    .level-card.active {
+      border-color: rgba(184,240,38,0.7);
+      background: rgba(184,240,38,0.05);
+    }
+
+    .level-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .level-title h4 {
+      font-family: 'Bebas Neue', cursive;
+      letter-spacing: 2px;
+      font-size: 1.4rem;
+      color: var(--lime);
+      margin: 0;
+    }
+
+    .level-title .level-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+    .level-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 10px 0;
+    }
+
+    .level-list { margin: 10px 0 0; padding-left: 18px; }
+    .level-list li { margin: 6px 0; color: var(--text-muted); font-size: 0.84rem; }
+
+    .level-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .level-actions .btn { padding: 10px 14px; font-size: 0.75rem; }
+
+    .error {
+      border: 1px solid rgba(255,68,68,0.35);
+      background: rgba(255,68,68,0.08);
+      color: #ffaaaa;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 0 18px; }
+      nav { gap: 12px; }
+      .section-card { padding: 22px; }
+      .session-block { grid-template-columns: 55px 1fr; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><span class="ball">⚽</span> PITCH PERFECT</div>
+    <nav>
+      <a href="index.html">Builder</a>
+      <a href="team.html">Team</a>
+      <a href="#plan">Training Plan</a>
+      <a href="#player">Player Training</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <div>
+        <h1>TRAINING</h1>
+        <div class="subtitle">Your 10-week team plan + individual player development programs.</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-ghost" id="downloadBtn">⬇ Download Profile</button>
+        <button class="btn btn-ghost" id="uploadBtn">⬆ Upload Profile</button>
+        <input type="file" id="uploadInput" accept="application/json" style="display:none" />
+      </div>
+    </div>
+
+    <div id="teamBanner" class="team-banner" style="display:none">
+      <div>
+        <div class="name" id="teamBannerName">—</div>
+        <div class="info" id="teamBannerInfo">—</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" id="regenTrainingBtn">🔁 Regenerate Plan</button>
+      </div>
+    </div>
+
+    <div id="missingProfile" class="error" style="display:none">
+      <strong>No team profile found.</strong>
+      <div style="margin-top:6px;">Go to <a href="index.html" style="color:var(--lime)">Builder</a>, enter your team, click <em>Build My Program</em>, then return here.</div>
+    </div>
+
+    <!-- STEP 3: Team training plan -->
+    <section class="section-card" id="plan" style="display:none">
+      <div class="section-label">Step Three</div>
+      <h2>10-Week Training Plan</h2>
+      <p class="muted" style="margin:0 0 12px;">Use week tabs to navigate. Video links are examples.</p>
+      <div class="weeks-nav" id="weeksNav"></div>
+      <div id="weeksContainer"></div>
+    </section>
+
+    <!-- STEP 4: Individual player training -->
+    <section class="section-card" id="player" style="display:none">
+      <div class="section-label">Step Four</div>
+      <h2>Individual Player Training</h2>
+      <p class="muted" style="margin:0 0 14px;">Choose a skill category, then select your current level (1–5). All levels are displayed at once.</p>
+      <div class="skill-grid" id="skillGrid"></div>
+      <div class="stage-bar">
+        <div class="stage-label">Current Level</div>
+        <div class="stage-selector" id="stageSelector"></div>
+      </div>
+      <div class="levels-grid" id="levelsGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    // IMPORTANT: keep key in sync across index.html / team.html / training.html
+    const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v4';
+
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Failed to load profile:', e);
+        return null;
+      }
+    }
+
+    function saveProfileMerged(patch) {
+      try {
+        const existing = loadProfile() || {};
+        const merged = { ...existing, ...patch, savedAt: new Date().toISOString() };
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(merged));
+      } catch (e) {
+        console.warn('Failed to save profile:', e);
+      }
+    }
+
+    function downloadProfile() {
+      const profile = loadProfile();
+      if (!profile || !profile.team) {
+        alert('No team profile found.');
+        return;
+      }
+      const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const safeName = (profile.team.teamName || 'team').replace(/[^a-z0-9\-_]+/gi, '_');
+      const stamp = new Date().toISOString().slice(0, 10);
+      const filename = `pitchperfect_${safeName}_${stamp}.json`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function uploadProfile(file) {
+      const txt = await file.text();
+      const profile = JSON.parse(txt);
+      if (!profile || !profile.team) throw new Error('Invalid profile');
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+      await init();
+    }
+
+    // ===== Training plan (offline generator) =====
+    function normaliseAge(ageGroup) {
+      const a = (ageGroup || '').toLowerCase();
+      if (a.includes('under 8')) return 'u8';
+      if (a.includes('under 10')) return 'u10';
+      if (a.includes('under 12')) return 'u12';
+      if (a.includes('under 14')) return 'u14';
+      if (a.includes('under 16')) return 'u16';
+      if (a.includes('under 18')) return 'u18';
+      return 'senior';
+    }
+
+    const WEEK_TEMPLATES = [
+      { theme: 'Ball Mastery & Confidence', focuses: ['Close control dribbling', 'Turns & shielding', '1v1 moves', 'Change of pace'], game: 'End-zone dribble scores (no passing for first 2 mins).' },
+      { theme: 'Passing & Support', focuses: ['Inside-foot passing', 'First touch direction', 'Support angles (triangles)', 'One-touch + two-touch choices'], game: '3-pass rule before scoring.' },
+      { theme: 'Receiving & Turning', focuses: ['Open body shape', 'Scan before receive', 'Turn out of pressure', 'Protect then play'], game: 'Score only after a turn or switch.' },
+      { theme: 'Attacking Principles', focuses: ['Width & depth', 'Overlap/underlap basics', 'Finishing technique', 'Final pass timing'], game: 'Wide channel bonus point for crosses/cutbacks.' },
+      { theme: 'Defending 1v1 & Delay', focuses: ['Jockeying', 'Tackling timing', 'Delay + angle away', 'Defend as a unit'], game: 'Win it back in 6 seconds for a bonus point.' },
+      { theme: 'Team Defending Shape', focuses: ['Compact lines', 'Press triggers', 'Cover & balance', 'Recover runs'], game: "Coach calls 'press' triggers; goals count double after a regain." },
+      { theme: 'Possession & Switching', focuses: ['Rondos', 'Third-man concept', 'Switch play', 'Patience vs penetration'], game: 'Must switch sides before scoring.' },
+      { theme: 'Set Plays & Restarts', focuses: ['Corners roles', 'Free kick options', 'Throw-ins to keep ball', 'Transition after restart'], game: 'Start every attack from a restart.' },
+      { theme: 'Game Model & Shape', focuses: ['Build-up patterns', 'Midfield rotations', 'Wide play patterns', 'Pressing structure'], game: 'Play in your chosen formation; coach frozen moments.' },
+      { theme: 'Review & Match Prep', focuses: ['Strengths review', 'Weakness fixes', 'Speed of play', 'Match scenarios'], game: 'Full mini match with match objectives + scoring rules.' },
+    ];
+
+    const VIDEO_LIBRARY = {
+      dribbling: [
+        { label: '▶ Dribbling Drills', url: 'https://www.youtube.com/results?search_query=soccer+dribbling+drills+training' },
+        { label: '▶ Close Control', url: 'https://www.youtube.com/results?search_query=close+ball+control+soccer+drill' }
+      ],
+      passing: [
+        { label: '▶ Passing Patterns', url: 'https://www.youtube.com/results?search_query=soccer+passing+drills+training' },
+        { label: '▶ One-Touch Passing', url: 'https://www.youtube.com/results?search_query=one+touch+passing+soccer+drill' }
+      ],
+      shooting: [
+        { label: '▶ Finishing Drills', url: 'https://www.youtube.com/results?search_query=soccer+shooting+finishing+drills' },
+        { label: '▶ Volleys & Headers', url: 'https://www.youtube.com/results?search_query=soccer+volley+header+drills' }
+      ],
+      defending: [
+        { label: '▶ Defensive Shape', url: 'https://www.youtube.com/results?search_query=soccer+defensive+shape+drills' },
+        { label: '▶ 1v1 Defending', url: 'https://www.youtube.com/results?search_query=1v1+defending+soccer+drill' }
+      ],
+      setplays: [
+        { label: '▶ Corner Kicks', url: 'https://www.youtube.com/results?search_query=soccer+corner+kick+tactics' },
+        { label: '▶ Free Kicks', url: 'https://www.youtube.com/results?search_query=soccer+free+kick+drills' }
+      ],
+      fitness: [
+        { label: '▶ Agility Ladder', url: 'https://www.youtube.com/results?search_query=soccer+agility+fitness+drills' },
+        { label: '▶ Speed Training', url: 'https://www.youtube.com/results?search_query=soccer+speed+training+drills' }
+      ],
+      teamwork: [
+        { label: '▶ Small Sided Games', url: 'https://www.youtube.com/results?search_query=small+sided+game+soccer+coaching' },
+        { label: '▶ Pressing Drills', url: 'https://www.youtube.com/results?search_query=soccer+pressing+drills+team' }
+      ],
+      possession: [
+        { label: '▶ Rondo Drills', url: 'https://www.youtube.com/results?search_query=soccer+rondo+possession+drill' },
+        { label: '▶ Positional Play', url: 'https://www.youtube.com/results?search_query=soccer+positional+play+coaching' }
+      ]
+    };
+
+    function getVideosForFocus(focus) {
+      const f = (focus || '').toLowerCase();
+      if (f.includes('dribbl')) return VIDEO_LIBRARY.dribbling;
+      if (f.includes('pass')) return VIDEO_LIBRARY.passing;
+      if (f.includes('shoot') || f.includes('finish')) return VIDEO_LIBRARY.shooting;
+      if (f.includes('defend') || f.includes('defence')) return VIDEO_LIBRARY.defending;
+      if (f.includes('set') || f.includes('corner') || f.includes('free')) return VIDEO_LIBRARY.setplays;
+      if (f.includes('fit') || f.includes('agil') || f.includes('speed')) return VIDEO_LIBRARY.fitness;
+      if (f.includes('posses') || f.includes('rondo')) return VIDEO_LIBRARY.possession;
+      return VIDEO_LIBRARY.teamwork;
+    }
+
+    function sessionDescription(focus, ageGroup) {
+      const ageKey = normaliseAge(ageGroup);
+      const short = (t) => t;
+      const medium = (t) => t + ' Add a coaching point every 2–3 reps and rotate roles quickly.';
+      const advanced = (t) => t + ' Add constraints (touch limits/press triggers) and demand scanning + communication.';
+      if (ageKey === 'u8' || ageKey === 'u10') return short(`Fun, high-rep practice for "${focus}". Keep it simple and let them play.`);
+      if (ageKey === 'u12' || ageKey === 'u14') return medium(`Progressive practice for "${focus}". Start unopposed, then add a defender and finish with a small-sided game.`);
+      return advanced(`High-intensity practice for "${focus}". Start with a technical pattern, move to opposed, then apply in a conditioned game.`);
+    }
+
+    function gameTipsForTheme(theme) {
+      const t = (theme || '').toLowerCase();
+      if (t.includes('ball mastery')) return ['Encourage bravery on the ball', 'Praise attempts, not perfection', 'Keep spacing so dribblers have options'];
+      if (t.includes('passing')) return ['Open your body to see two options', 'Pass and move immediately', 'Use the safe pass when pressured'];
+      if (t.includes('receiving')) return ['Scan before the ball arrives', 'First touch into space', 'Shield first if under pressure'];
+      if (t.includes('attacking')) return ['Create width early', 'Attack the far post', 'Shoot when balanced'];
+      if (t.includes('defending 1v1')) return ['Slow the attacker first', 'Show them away from goal', 'Win it when they take a big touch'];
+      if (t.includes('team defending')) return ['Stay compact', 'Press together, not alone', 'Recover quickly after losing it'];
+      if (t.includes('possession')) return ['Be patient', 'Switch when crowded', 'Play forward when you can'];
+      if (t.includes('set plays')) return ['Quick restarts catch teams out', 'Know your role', 'Be ready for second balls'];
+      if (t.includes('shape')) return ['Keep distances between lines', 'Communicate', 'Recognise pressing triggers'];
+      return ['Play with intensity', 'Communicate', 'Reflect on what worked'];
+    }
+
+    function buildOfflineWeeks(ageGroup) {
+      return WEEK_TEMPLATES.map((tpl, i) => ({
+        week: i + 1,
+        theme: tpl.theme,
+        mini_sessions: tpl.focuses.map(f => ({ focus: f, description: sessionDescription(f, ageGroup) })),
+        game_description: tpl.game,
+        game_tips: gameTipsForTheme(tpl.theme)
+      }));
+    }
+
+    function renderWeek(weekData, weekNum) {
+      const sessions = (weekData.mini_sessions || []).map((ms, i) => {
+        const startMin = i * 10;
+        const endMin = startMin + 10;
+        const vids = getVideosForFocus(ms.focus);
+        const videoHTML = (vids || []).map(v => `<a class="video-link" href="${v.url}" target="_blank">${v.label}</a>`).join('');
+        return `
+          <div class="session-block">
+            <div class="session-time"><span class="mins">${startMin}–${endMin}</span>min</div>
+            <div class="session-body">
+              <h4>🎯 ${ms.focus}</h4>
+              <p>${ms.description}</p>
+              <div class="video-links">${videoHTML}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const gameTips = (weekData.game_tips || []).map(t => `<span class="tip-tag">→ ${t}</span>`).join('');
+
+      return `
+        <div class="week-content" id="week-${weekNum}">
+          <div class="week-header">
+            <h3>Week ${weekNum}</h3>
+            <span class="week-theme">Theme: ${weekData.theme}</span>
+          </div>
+          <div class="session-timeline">
+            ${sessions}
+            <div class="session-block game-block">
+              <div class="session-time"><span class="mins">40–50</span>min</div>
+              <div class="session-body">
+                <h4>⚽ Mini Match (10 mins)</h4>
+                <p>${weekData.game_description}</p>
+                <div class="tips-list">${gameTips}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTraining(weeks) {
+      const nav = document.getElementById('weeksNav');
+      const container = document.getElementById('weeksContainer');
+      nav.innerHTML = '';
+      container.innerHTML = '';
+
+      (weeks || []).forEach((w, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'week-btn' + (i === 0 ? ' active' : '');
+        btn.textContent = `W${w.week}`;
+        btn.onclick = () => {
+          document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.week-content').forEach(c => c.classList.remove('visible'));
+          btn.classList.add('active');
+          const el = document.getElementById('week-' + w.week);
+          if (el) el.classList.add('visible');
+        };
+        nav.appendChild(btn);
+        container.insertAdjacentHTML('beforeend', renderWeek(w, w.week));
+      });
+
+      const first = document.getElementById('week-1');
+      if (first) first.classList.add('visible');
+    }
+
+    async function generateTrainingForTeam(team) {
+      await sleep(300);
+      const weeks = buildOfflineWeeks(team.ageGroup);
+      saveProfileMerged({ trainingWeeks: weeks });
+      return weeks;
+    }
+
+    // ===== Player training state/render =====
+    let playerTraining = { selectedCategory: 'dribbling', stageByCategory: {} };
+
+    const PLAYER_SKILLS = {
+      dribbling: {
+        label: 'Dribbling / Close Control', icon: '🟢',
+        levels: [
+          { title: 'Level 1 — Foundation', summary: 'Build comfort with many touches and both feet.', bullets: ['100 touches warm-up (inside/outside/sole)', 'Cone slalom at walking pace', '1-minute ball mastery circuit'], videos: [
+            { label: '▶ Close control basics', url: 'https://www.youtube.com/results?search_query=soccer+close+control+dribbling+drills' },
+            { label: '▶ Ball mastery routine', url: 'https://www.youtube.com/results?search_query=ball+mastery+soccer+drills+beginner' }
+          ]},
+          { title: 'Level 2 — Change of Direction', summary: 'Add turns, stops, and quick changes.', bullets: ['Inside cut / outside cut reps', 'Drag-back + accelerate', 'Figure-8 dribble around cones'], videos: [
+            { label: '▶ Turns & cuts', url: 'https://www.youtube.com/results?search_query=soccer+turns+and+cuts+drills' },
+            { label: '▶ Change of direction', url: 'https://www.youtube.com/results?search_query=soccer+change+of+direction+dribbling' }
+          ]},
+          { title: 'Level 3 — Game Speed', summary: 'Execute moves at speed with head up.', bullets: ['Slalom at speed (head up)', 'Move + burst into space', 'Timed dribble gates'], videos: [
+            { label: '▶ Dribbling at speed', url: 'https://www.youtube.com/results?search_query=soccer+dribbling+at+speed+drills' },
+            { label: '▶ Head up dribbling', url: 'https://www.youtube.com/results?search_query=head+up+dribbling+soccer+drill' }
+          ]},
+          { title: 'Level 4 — 1v1 Pressure', summary: 'Beat a defender using body feints and timing.', bullets: ['1v1 channel game', 'Step-over / scissors combos', 'Protect then explode'], videos: [
+            { label: '▶ 1v1 skills', url: 'https://www.youtube.com/results?search_query=soccer+1v1+dribbling+skills+drills' },
+            { label: '▶ Feints & body moves', url: 'https://www.youtube.com/results?search_query=soccer+body+feint+drill' }
+          ]},
+          { title: 'Level 5 — Match Scenarios', summary: 'Use dribbling to create chances under constraints.', bullets: ['Receive under pressure → escape', 'Dribble to draw defender → pass', 'Small-sided game with dribble bonus'], videos: [
+            { label: '▶ Small-sided dribbling', url: 'https://www.youtube.com/results?search_query=small+sided+games+dribbling+focus' },
+            { label: '▶ Dribble to create', url: 'https://www.youtube.com/results?search_query=dribble+to+create+space+soccer' }
+          ]}
+        ]
+      },
+      shooting_strength: {
+        label: 'Shooting Strength (Power)', icon: '💥',
+        levels: [
+          { title: 'Level 1 — Technique Base', summary: 'Clean contact and body shape.', bullets: ['Plant foot beside ball', 'Lock ankle, strike through center', '3×10 controlled strikes'], videos: [
+            { label: '▶ Shooting power technique', url: 'https://www.youtube.com/results?search_query=soccer+shooting+technique+power' },
+            { label: '▶ Strike a ball with power', url: 'https://www.youtube.com/results?search_query=how+to+strike+a+soccer+ball+power' }
+          ]},
+          { title: 'Level 2 — Hip Drive', summary: 'Generate power from hips and core.', bullets: ['Step-through strikes', 'Core stability', 'Wall strike rebound drill'], videos: [
+            { label: '▶ Hip drive shooting', url: 'https://www.youtube.com/results?search_query=soccer+shooting+power+hip+drive' },
+            { label: '▶ Core for shooting', url: 'https://www.youtube.com/results?search_query=core+workout+soccer+shooting' }
+          ]},
+          { title: 'Level 3 — Power Under Time', summary: 'Shoot quickly from different angles.', bullets: ['One-touch shooting', '2-touch finish', 'Angle finishing'], videos: [
+            { label: '▶ One-touch finishing', url: 'https://www.youtube.com/results?search_query=one+touch+finishing+soccer+drills' },
+            { label: '▶ Power finishing drills', url: 'https://www.youtube.com/results?search_query=power+finishing+soccer+drills' }
+          ]},
+          { title: 'Level 4 — Resistance', summary: 'Add resisted sprints + strike patterns.', bullets: ['Resisted sprint 5–10m', 'Strike after sprint', 'Recovery + repeat'], videos: [
+            { label: '▶ Resisted sprint soccer', url: 'https://www.youtube.com/results?search_query=resisted+sprint+soccer+training' },
+            { label: '▶ Finish after sprint', url: 'https://www.youtube.com/results?search_query=finish+after+sprint+soccer+drill' }
+          ]},
+          { title: 'Level 5 — Match Finishing', summary: 'Finish at max intensity in realistic patterns.', bullets: ['Counterattack finishing', 'First-time shot', 'Shot selection'], videos: [
+            { label: '▶ Match finishing patterns', url: 'https://www.youtube.com/results?search_query=match+finishing+patterns+soccer' },
+            { label: '▶ Finishing under pressure', url: 'https://www.youtube.com/results?search_query=finishing+under+pressure+soccer' }
+          ]}
+        ]
+      },
+      shooting_accuracy: {
+        label: 'Shooting Accuracy', icon: '🎯',
+        levels: [
+          { title: 'Level 1 — Target Practice', summary: 'Hit zones with controlled strikes.', bullets: ['Corner targets', 'Inside-foot placement', 'Low corners'], videos: [
+            { label: '▶ Shooting accuracy drills', url: 'https://www.youtube.com/results?search_query=soccer+shooting+accuracy+drills' },
+            { label: '▶ Placement finishing', url: 'https://www.youtube.com/results?search_query=placement+finishing+soccer+drill' }
+          ]},
+          { title: 'Level 2 — Touch to Shoot', summary: 'First touch sets the shot.', bullets: ['Receive across body', 'Touch into lane', 'Finish low corners'], videos: [
+            { label: '▶ First touch to finish', url: 'https://www.youtube.com/results?search_query=first+touch+finishing+soccer+drills' },
+            { label: '▶ Two-touch finishing', url: 'https://www.youtube.com/results?search_query=two+touch+finishing+soccer' }
+          ]},
+          { title: 'Level 3 — One-touch Accuracy', summary: 'Accurate strikes with minimal time.', bullets: ['Wall pass → shoot', 'Cross → first-time finish', 'Controlled volleys'], videos: [
+            { label: '▶ One-touch accuracy', url: 'https://www.youtube.com/results?search_query=one+touch+finishing+accuracy+drills' },
+            { label: '▶ First-time finishing', url: 'https://www.youtube.com/results?search_query=first+time+finishing+soccer+drills' }
+          ]},
+          { title: 'Level 4 — Under Pressure', summary: 'Finish with a defender closing.', bullets: ['1v1 to goal', 'Chase pressure drill', 'Quick decisions'], videos: [
+            { label: '▶ Finishing under pressure', url: 'https://www.youtube.com/results?search_query=finishing+under+pressure+soccer+drills' },
+            { label: '▶ 1v1 finishing', url: 'https://www.youtube.com/results?search_query=1v1+finishing+soccer+drill' }
+          ]},
+          { title: 'Level 5 — Game Scenarios', summary: 'Shot selection and composure.', bullets: ['Read keeper position', 'Curled vs driven', 'Finish after combination'], videos: [
+            { label: '▶ Composed finishing', url: 'https://www.youtube.com/results?search_query=composure+finishing+soccer+drills' },
+            { label: '▶ Finishing combinations', url: 'https://www.youtube.com/results?search_query=finishing+combination+play+soccer' }
+          ]}
+        ]
+      },
+      speed: {
+        label: 'Speed (Top Speed)', icon: '⚡',
+        levels: [
+          { title: 'Level 1 — Mechanics', summary: 'Posture, arm drive, foot strike.', bullets: ['A-skips/B-skips', 'Wall drives', '10–20m relaxed sprints'], videos: [
+            { label: '▶ Sprint mechanics', url: 'https://www.youtube.com/results?search_query=sprint+mechanics+for+soccer' },
+            { label: '▶ A-skip drills', url: 'https://www.youtube.com/results?search_query=a+skip+drill+soccer+speed' }
+          ]},
+          { title: 'Level 2 — Flying 20s', summary: 'Build max speed safely.', bullets: ['20m build-up + 20m fly', 'Full recovery', '3–5 reps'], videos: [
+            { label: '▶ Flying sprints', url: 'https://www.youtube.com/results?search_query=flying+20+sprint+training' },
+            { label: '▶ Top speed soccer', url: 'https://www.youtube.com/results?search_query=soccer+top+speed+training' }
+          ]},
+          { title: 'Level 3 — Curves & Angles', summary: 'Sprint with changes in line.', bullets: ['Arc runs', 'Diagonal sprints', 'Sprint into decel'], videos: [
+            { label: '▶ Curved sprints', url: 'https://www.youtube.com/results?search_query=curved+sprints+soccer' },
+            { label: '▶ Angle runs', url: 'https://www.youtube.com/results?search_query=angle+sprint+drills+soccer' }
+          ]},
+          { title: 'Level 4 — Speed with Ball', summary: 'Carry the ball at high pace.', bullets: ['Long touch runs', 'Touch every 3–4 steps', 'Sprint to gate with ball'], videos: [
+            { label: '▶ Speed dribbling', url: 'https://www.youtube.com/results?search_query=speed+dribbling+soccer+drills' },
+            { label: '▶ Running with ball', url: 'https://www.youtube.com/results?search_query=run+with+ball+soccer+drill' }
+          ]},
+          { title: 'Level 5 — Match Repeats', summary: 'Repeat sprints like a game.', bullets: ['Repeat 30–40m sprints', 'Short rest blocks', 'Track consistency'], videos: [
+            { label: '▶ Repeat sprint ability', url: 'https://www.youtube.com/results?search_query=repeat+sprint+ability+soccer+training' },
+            { label: '▶ Speed endurance', url: 'https://www.youtube.com/results?search_query=speed+endurance+soccer+drills' }
+          ]}
+        ]
+      },
+      acceleration: {
+        label: 'Acceleration (0–10m)', icon: '🚀',
+        levels: [
+          { title: 'Level 1 — First Step', summary: 'Explosive first movement.', bullets: ['2–5m starts', 'Falling starts', 'Drive knee + arms'], videos: [
+            { label: '▶ Acceleration drills', url: 'https://www.youtube.com/results?search_query=acceleration+drills+soccer' },
+            { label: '▶ First-step quickness', url: 'https://www.youtube.com/results?search_query=first+step+quickness+soccer' }
+          ]},
+          { title: 'Level 2 — Reaction', summary: 'React to cues then sprint.', bullets: ['Coach clap/point cue', 'Ball drop reaction', '5–10m bursts'], videos: [
+            { label: '▶ Reaction sprints', url: 'https://www.youtube.com/results?search_query=reaction+sprint+drills+soccer' },
+            { label: '▶ Quick starts', url: 'https://www.youtube.com/results?search_query=quick+starts+soccer+training' }
+          ]},
+          { title: 'Level 3 — Resisted Starts', summary: 'Add light resistance.', bullets: ['Band resisted 5m', 'Light sled pushes', 'Full recovery'], videos: [
+            { label: '▶ Resisted acceleration', url: 'https://www.youtube.com/results?search_query=resisted+acceleration+drills' },
+            { label: '▶ Band acceleration', url: 'https://www.youtube.com/results?search_query=band+acceleration+soccer' }
+          ]},
+          { title: 'Level 4 — Decel/Accel', summary: 'Stop then re-accelerate.', bullets: ['Sprint → stop → sprint', 'Mirror drill', '3-direction bursts'], videos: [
+            { label: '▶ Decel/accel drills', url: 'https://www.youtube.com/results?search_query=deceleration+acceleration+soccer+drills' },
+            { label: '▶ Change of pace', url: 'https://www.youtube.com/results?search_query=change+of+pace+soccer+drills' }
+          ]},
+          { title: 'Level 5 — Game Triggers', summary: 'Accelerate on match moments.', bullets: ['Pressing triggers', 'Explosive support runs', 'Recovery sprints'], videos: [
+            { label: '▶ Pressing sprints', url: 'https://www.youtube.com/results?search_query=pressing+triggers+soccer+sprint' },
+            { label: '▶ Support runs', url: 'https://www.youtube.com/results?search_query=support+runs+soccer+training' }
+          ]}
+        ]
+      },
+      passing: {
+        label: 'Passing', icon: '🧩',
+        levels: [
+          { title: 'Level 1 — Basics', summary: 'Inside-foot accuracy and first touch.', bullets: ['Wall passes both feet', 'Receive across body', 'Pass + move pattern'], videos: [
+            { label: '▶ Passing basics', url: 'https://www.youtube.com/results?search_query=soccer+passing+basics+drills' },
+            { label: '▶ Wall passing', url: 'https://www.youtube.com/results?search_query=wall+passing+soccer+drills' }
+          ]},
+          { title: 'Level 2 — Weight of Pass', summary: 'Right speed and distance.', bullets: ['Gates passing', 'Firm pass into feet', '2-touch rhythm'], videos: [
+            { label: '▶ Weight of pass', url: 'https://www.youtube.com/results?search_query=weight+of+pass+soccer+drills' },
+            { label: '▶ Passing through gates', url: 'https://www.youtube.com/results?search_query=passing+through+gates+soccer+drill' }
+          ]},
+          { title: 'Level 3 — One-touch', summary: 'Speed up play with one-touch.', bullets: ['One-touch wall sequence', 'Rondo 3v1/4v2', 'Half-turn to one-touch'], videos: [
+            { label: '▶ One-touch passing', url: 'https://www.youtube.com/results?search_query=one+touch+passing+soccer+drills' },
+            { label: '▶ Rondo drills', url: 'https://www.youtube.com/results?search_query=rondo+drills+soccer' }
+          ]},
+          { title: 'Level 4 — Combination', summary: 'Third-man and overlaps.', bullets: ['Give-and-go', 'Third-man run', 'Overlap timing'], videos: [
+            { label: '▶ Give and go', url: 'https://www.youtube.com/results?search_query=give+and+go+soccer+drills' },
+            { label: '▶ Third man runs', url: 'https://www.youtube.com/results?search_query=third+man+run+soccer+drills' }
+          ]},
+          { title: 'Level 5 — Game Passing', summary: 'Break lines and switch play.', bullets: ['Split pass into mini goals', 'Switch through wide targets', 'Decisions under pressure'], videos: [
+            { label: '▶ Breaking lines', url: 'https://www.youtube.com/results?search_query=breaking+lines+passing+soccer+drills' },
+            { label: '▶ Switching play', url: 'https://www.youtube.com/results?search_query=switch+play+soccer+drills' }
+          ]}
+        ]
+      },
+      first_touch: {
+        label: 'First Touch / Receiving', icon: '🧠',
+        levels: [
+          { title: 'Level 1 — Cushion Control', summary: 'Soft touch and ball mastery.', bullets: ['Receive + stop', 'Inside/outside cushion', 'Wall receive 50 reps'], videos: [
+            { label: '▶ First touch basics', url: 'https://www.youtube.com/results?search_query=first+touch+soccer+drills+beginner' },
+            { label: '▶ Cushion control', url: 'https://www.youtube.com/results?search_query=cushion+control+soccer+drills' }
+          ]},
+          { title: 'Level 2 — Directional Touch', summary: 'First touch into space.', bullets: ['Receive into gates', 'Touch away from pressure', 'Half-turn receive'], videos: [
+            { label: '▶ Directional touch', url: 'https://www.youtube.com/results?search_query=directional+first+touch+soccer+drill' },
+            { label: '▶ Half-turn receiving', url: 'https://www.youtube.com/results?search_query=half+turn+receiving+soccer+drills' }
+          ]},
+          { title: 'Level 3 — Scanning', summary: 'Look before receiving.', bullets: ['Check shoulder cue', 'Color call receive', 'Scan → receive → play'], videos: [
+            { label: '▶ Scanning drills', url: 'https://www.youtube.com/results?search_query=scanning+before+receiving+soccer+drills' },
+            { label: '▶ Awareness first touch', url: 'https://www.youtube.com/results?search_query=awareness+first+touch+soccer+drills' }
+          ]},
+          { title: 'Level 4 — Under Pressure', summary: 'Protect then play.', bullets: ['Defender on back', 'Shield + spin', 'Bounce pass support'], videos: [
+            { label: '▶ Receiving under pressure', url: 'https://www.youtube.com/results?search_query=receiving+under+pressure+soccer+drills' },
+            { label: '▶ Shielding & turning', url: 'https://www.youtube.com/results?search_query=shielding+turning+soccer+drills' }
+          ]},
+          { title: 'Level 5 — Match Tempo', summary: 'First touch sets next action instantly.', bullets: ['One-touch out of feet', 'Receive → split pass', 'Receive → shot/cross'], videos: [
+            { label: '▶ Match-speed first touch', url: 'https://www.youtube.com/results?search_query=first+touch+match+speed+soccer+drills' },
+            { label: '▶ Positional receiving', url: 'https://www.youtube.com/results?search_query=positional+receiving+soccer+drills' }
+          ]}
+        ]
+      },
+      agility: {
+        label: 'Agility / Change of Direction', icon: '🔁',
+        levels: [
+          { title: 'Level 1 — Footwork', summary: 'Coordination and foot speed.', bullets: ['Ladder basics', 'Quick-feet cone taps', 'Balance holds'], videos: [
+            { label: '▶ Agility ladder', url: 'https://www.youtube.com/results?search_query=soccer+agility+ladder+drills' },
+            { label: '▶ Footwork drills', url: 'https://www.youtube.com/results?search_query=footwork+agility+soccer+drills' }
+          ]},
+          { title: 'Level 2 — Deceleration', summary: 'Brake safely and re-accelerate.', bullets: ['Sprint → stop technique', 'Plant and cut', '5-10-5 shuttle'], videos: [
+            { label: '▶ Deceleration technique', url: 'https://www.youtube.com/results?search_query=deceleration+technique+soccer' },
+            { label: '▶ 5-10-5 shuttle', url: 'https://www.youtube.com/results?search_query=5-10-5+shuttle+drill+soccer' }
+          ]},
+          { title: 'Level 3 — Reactive COD', summary: 'Change direction on cue.', bullets: ['Mirror drill', 'Color cone reaction', 'Coach point cut'], videos: [
+            { label: '▶ Reactive agility', url: 'https://www.youtube.com/results?search_query=reactive+agility+drills+soccer' },
+            { label: '▶ Mirror drill', url: 'https://www.youtube.com/results?search_query=mirror+drill+soccer' }
+          ]},
+          { title: 'Level 4 — With Ball', summary: 'Agility while dribbling.', bullets: ['Dribble + cut combo', 'Slalom + burst', 'Tight turns on command'], videos: [
+            { label: '▶ Dribbling agility', url: 'https://www.youtube.com/results?search_query=dribbling+agility+soccer+drills' },
+            { label: '▶ Tight turns', url: 'https://www.youtube.com/results?search_query=tight+turns+soccer+drills' }
+          ]},
+          { title: 'Level 5 — Game Patterns', summary: 'Agility in realistic moments.', bullets: ['Press → cut line', 'Recover and turn', '1v1 defending footwork'], videos: [
+            { label: '▶ Defensive agility', url: 'https://www.youtube.com/results?search_query=defensive+agility+soccer+drills' },
+            { label: '▶ Pressing footwork', url: 'https://www.youtube.com/results?search_query=pressing+footwork+soccer' }
+          ]}
+        ]
+      },
+      endurance: {
+        label: 'Endurance / Match Fitness', icon: '🫁',
+        levels: [
+          { title: 'Level 1 — Base', summary: 'Build aerobic base safely.', bullets: ['Easy intervals 30/30', 'Continuous 12–20 min run', 'Low intensity ball work'], videos: [
+            { label: '▶ Soccer endurance', url: 'https://www.youtube.com/results?search_query=soccer+endurance+training' },
+            { label: '▶ Aerobic base', url: 'https://www.youtube.com/results?search_query=aerobic+base+soccer+training' }
+          ]},
+          { title: 'Level 2 — Tempo', summary: 'Increase pace and tolerance.', bullets: ['3–4×4 min tempo', 'Jog recovery', 'Track breathing'], videos: [
+            { label: '▶ Tempo runs', url: 'https://www.youtube.com/results?search_query=tempo+run+soccer+fitness' },
+            { label: '▶ Interval training', url: 'https://www.youtube.com/results?search_query=interval+training+soccer+fitness' }
+          ]},
+          { title: 'Level 3 — Repeat Sprint', summary: 'Game-like repeated efforts.', bullets: ['10×20m sprints', 'Short rest', 'Maintain quality'], videos: [
+            { label: '▶ Repeat sprint ability', url: 'https://www.youtube.com/results?search_query=repeat+sprint+ability+soccer+training' },
+            { label: '▶ HIIT soccer', url: 'https://www.youtube.com/results?search_query=hiit+soccer+training' }
+          ]},
+          { title: 'Level 4 — With Ball', summary: 'Fitness through ball circuits.', bullets: ['Dribble circuit intervals', 'Rondo conditioning', 'Small-sided HIIT'], videos: [
+            { label: '▶ Fitness with ball', url: 'https://www.youtube.com/results?search_query=fitness+with+ball+soccer+drills' },
+            { label: '▶ Conditioning rondos', url: 'https://www.youtube.com/results?search_query=conditioning+rondo+soccer' }
+          ]},
+          { title: 'Level 5 — Match Model', summary: 'Train like match demands.', bullets: ['Position-specific runs', 'Scenario repeats', 'Monitor recovery'], videos: [
+            { label: '▶ Match fitness program', url: 'https://www.youtube.com/results?search_query=match+fitness+soccer+program' },
+            { label: '▶ Position-specific conditioning', url: 'https://www.youtube.com/results?search_query=position+specific+conditioning+soccer' }
+          ]}
+        ]
+      },
+      defending_1v1: {
+        label: '1v1 Defending / Tackling', icon: '🛡️',
+        levels: [
+          { title: 'Level 1 — Stance & Delay', summary: 'Learn the defensive stance and how to slow the attacker.', bullets: ['Side-on stance, knees bent', 'Show attacker away from goal', 'Delay until help arrives'], videos: [
+            { label: '▶ 1v1 defending basics', url: 'https://www.youtube.com/results?search_query=1v1+defending+soccer+basics' },
+            { label: '▶ Jockeying technique', url: 'https://www.youtube.com/results?search_query=jockeying+defending+soccer+drill' }
+          ]},
+          { title: 'Level 2 — Angle & Channel', summary: 'Force play into a channel and protect the inside.', bullets: ['Block the direct line to goal', 'Use the touchline as a defender', 'Win it on a big touch'], videos: [
+            { label: '▶ Channel defending', url: 'https://www.youtube.com/results?search_query=channel+defending+soccer+drills' },
+            { label: '▶ Tackle timing', url: 'https://www.youtube.com/results?search_query=tackle+timing+soccer+drills' }
+          ]},
+          { title: 'Level 3 — Intercept & Recover', summary: 'Add interceptions and recovery runs into the skill.', bullets: ['Read the attacker’s touches', 'Recover quickly after being beaten', 'Steal passes with front foot'], videos: [
+            { label: '▶ Interceptions', url: 'https://www.youtube.com/results?search_query=soccer+interceptions+defending+drills' },
+            { label: '▶ Recovery defending', url: 'https://www.youtube.com/results?search_query=recovery+defending+soccer+drills' }
+          ]},
+          { title: 'Level 4 — Competitive Duels', summary: 'High repetition competitive 1v1s.', bullets: ['1v1 to mini goals', 'Winner stays on', 'Work for 15–20 sec bouts'], videos: [
+            { label: '▶ Competitive 1v1 drills', url: 'https://www.youtube.com/results?search_query=competitive+1v1+soccer+drills' },
+            { label: '▶ 1v1 to mini goals', url: 'https://www.youtube.com/results?search_query=1v1+mini+goals+soccer+drill' }
+          ]},
+          { title: 'Level 5 — Match Scenarios', summary: 'Defend in realistic match moments and triggers.', bullets: ['Pressing triggers (bad touch/back pass)', 'Defend cutbacks', 'Delay then counter win'], videos: [
+            { label: '▶ Pressing triggers', url: 'https://www.youtube.com/results?search_query=pressing+triggers+soccer+defending' },
+            { label: '▶ Defending cutbacks', url: 'https://www.youtube.com/results?search_query=defending+cutbacks+soccer+drills' }
+          ]}
+        ]
+      }
+    };
+
+    function getPlayerStage(categoryKey) {
+      const s = playerTraining.stageByCategory[categoryKey];
+      return (typeof s === 'number' && s >= 1 && s <= 5) ? s : 1;
+    }
+
+    function setPlayerCategory(categoryKey) {
+      if (!PLAYER_SKILLS[categoryKey]) return;
+      playerTraining.selectedCategory = categoryKey;
+      if (!playerTraining.stageByCategory[categoryKey]) playerTraining.stageByCategory[categoryKey] = 1;
+      saveProfileMerged({ playerTraining });
+      renderPlayerTraining();
+    }
+
+    function setPlayerStage(stageNum) {
+      const key = playerTraining.selectedCategory || 'dribbling';
+      playerTraining.stageByCategory[key] = stageNum;
+      saveProfileMerged({ playerTraining });
+      renderPlayerTraining();
+    }
+
+    function renderPlayerTraining() {
+      const grid = document.getElementById('skillGrid');
+      const selector = document.getElementById('stageSelector');
+      const levels = document.getElementById('levelsGrid');
+      if (!grid || !selector || !levels) return;
+
+      const selectedKey = playerTraining.selectedCategory || 'dribbling';
+      const currentStage = getPlayerStage(selectedKey);
+
+      grid.innerHTML = Object.entries(PLAYER_SKILLS).map(([key, cfg]) => {
+        const active = key === selectedKey ? ' active' : '';
+        return `
+          <button class="skill-btn${active}" onclick="setPlayerCategory('${key}')">
+            <span class="skill-name">${cfg.label}</span>
+            <span class="skill-icon">${cfg.icon}</span>
+          </button>
+        `;
+      }).join('');
+
+      selector.innerHTML = [1,2,3,4,5].map(n => {
+        const active = n === currentStage ? ' active' : '';
+        return `<button class="stage-chip${active}" onclick="setPlayerStage(${n})">Level ${n}</button>`;
+      }).join('');
+
+      const cfg = PLAYER_SKILLS[selectedKey];
+      levels.innerHTML = cfg.levels.map((lvl, idx) => {
+        const n = idx + 1;
+        const active = n === currentStage ? ' active' : '';
+        const bullets = (lvl.bullets || []).map(b => `<li>${b}</li>`).join('');
+        const vids = (lvl.videos || []).map(v => `<a class="video-link" href="${v.url}" target="_blank">${v.label}</a>`).join('');
+        return `
+          <div class="level-card${active}">
+            <div class="level-title">
+              <h4>Level ${n}</h4>
+              <span class="level-sub">${lvl.title.replace(/^Level\s\d+\s—\s/, '')}</span>
+            </div>
+            <p>${lvl.summary}</p>
+            <ul class="level-list">${bullets}</ul>
+            <div class="level-actions">
+              <button class="btn btn-ghost" onclick="setPlayerStage(${n})">Set as current level</button>
+            </div>
+            <div class="video-links">${vids}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function init() {
+      const profile = loadProfile();
+      const missing = document.getElementById('missingProfile');
+      const plan = document.getElementById('plan');
+      const player = document.getElementById('player');
+      const banner = document.getElementById('teamBanner');
+
+      if (!profile || !profile.team) {
+        if (missing) missing.style.display = 'block';
+        if (plan) plan.style.display = 'none';
+        if (player) player.style.display = 'none';
+        if (banner) banner.style.display = 'none';
+        return;
+      }
+
+      if (missing) missing.style.display = 'none';
+      if (plan) plan.style.display = 'block';
+      if (player) player.style.display = 'block';
+      if (banner) banner.style.display = 'flex';
+
+      // Team banner
+      document.getElementById('teamBannerName').textContent = profile.team.teamName || '—';
+      document.getElementById('teamBannerInfo').textContent = `${profile.team.onField}v${profile.team.onField} · ${profile.team.squadSize} players · ${profile.team.ageGroup} · ${profile.team.genderDetail || profile.team.gender}`;
+
+      // Training plan
+      const weeks = (profile.trainingWeeks && Array.isArray(profile.trainingWeeks) && profile.trainingWeeks.length)
+        ? profile.trainingWeeks
+        : await generateTrainingForTeam(profile.team);
+
+      renderTraining(weeks);
+
+      // Player training state
+      playerTraining = profile.playerTraining || { selectedCategory: 'dribbling', stageByCategory: {} };
+      if (!playerTraining.selectedCategory) playerTraining.selectedCategory = 'dribbling';
+      if (!playerTraining.stageByCategory[playerTraining.selectedCategory]) playerTraining.stageByCategory[playerTraining.selectedCategory] = 1;
+      saveProfileMerged({ playerTraining });
+      renderPlayerTraining();
+
+      // Wire buttons
+      document.getElementById('downloadBtn').onclick = downloadProfile;
+      document.getElementById('uploadBtn').onclick = () => document.getElementById('uploadInput').click();
+      document.getElementById('uploadInput').onchange = async (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (file) {
+          try { await uploadProfile(file); } catch (e) { alert('Upload failed.'); }
+        }
+        ev.target.value = '';
+      };
+
+      document.getElementById('regenTrainingBtn').onclick = async () => {
+        const newWeeks = await generateTrainingForTeam(profile.team);
+        renderTraining(newWeeks);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
