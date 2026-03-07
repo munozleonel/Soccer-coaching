@@ -15,8 +15,8 @@
       --white: #f5f7f0;
       --off-white: #e8ede0;
       --dark: #0d1f15;
-      --panel: rgba(13, 31, 21, 0.85);
-      --border: rgba(184, 240, 38, 0.25);
+      --panel: rgba(13,31,21,0.85);
+      --border: rgba(184,240,38,0.25);
       --text-muted: #7a9a80;
       --red: #ff4444;
     }
@@ -91,6 +91,7 @@
       text-transform: uppercase;
       transition: color 0.2s;
     }
+
     nav a:hover { color: var(--lime); }
 
     /* ===== MAIN ===== */
@@ -280,6 +281,7 @@
       padding: 14px 28px;
       cursor: pointer;
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      text-decoration: none;
     }
 
     .btn:hover {
@@ -306,7 +308,7 @@
 
     .btn-ghost:hover { background: rgba(184,240,38,0.1); }
 
-    /* ===== TEAM INFO BADGE ===== */
+    /* ===== TEAM BADGE ===== */
     .team-badge {
       display: none;
       align-items: center;
@@ -317,7 +319,9 @@
       padding: 16px 24px;
       margin-bottom: 28px;
     }
+
     .team-badge.visible { display: flex; }
+
     .team-badge .badge-name { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; color: var(--lime); }
     .team-badge .badge-info { font-size: 0.85rem; color: var(--text-muted); }
 
@@ -331,6 +335,7 @@
       text-align: center;
       color: var(--text-muted);
     }
+
     .locked-msg.visible { display: flex; }
     .locked-msg .lock-icon { font-size: 2rem; opacity: 0.4; }
     .locked-msg p { font-size: 0.9rem; }
@@ -344,8 +349,8 @@
       padding: 60px 0;
       color: var(--text-muted);
     }
-    .loader.visible { display: flex; }
 
+    .loader.visible { display: flex; }
     .loader-balls { display: flex; gap: 12px; }
 
     .loader-ball {
@@ -355,6 +360,7 @@
       background: var(--lime);
       animation: bounce 0.8s ease-in-out infinite;
     }
+
     .loader-ball:nth-child(2) { animation-delay: 0.2s; }
     .loader-ball:nth-child(3) { animation-delay: 0.4s; }
 
@@ -363,7 +369,7 @@
       50% { transform: translateY(-16px); opacity: 0.5; }
     }
 
-    /* ===== FORMATION ===== */
+    /* ===== FORMATION UI ===== */
     .formations-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -416,7 +422,6 @@
       overflow: hidden;
     }
 
-    /* Pitch markings */
     .formation-field::before {
       content: '';
       position: absolute;
@@ -471,6 +476,7 @@
       z-index: 5;
       transition: transform 0.2s;
     }
+
     .player-dot:hover { transform: translate(-50%, -50%) scale(1.2); }
 
     .dot-circle {
@@ -488,6 +494,7 @@
       font-weight: 700;
       box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
+
     .dot-circle.gk { background: #ffa500; }
 
     .player-tooltip {
@@ -504,10 +511,12 @@
       pointer-events: none;
       line-height: 1.5;
     }
+
     .player-dot:hover .player-tooltip { display: block; }
     .player-tooltip strong { color: var(--lime); display: block; margin-bottom: 4px; font-size: 0.8rem; }
 
     .formation-info { padding: 16px; }
+
     .formation-info h4 {
       font-family: 'Space Mono', monospace;
       font-size: 0.75rem;
@@ -516,6 +525,7 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
     .formation-info p {
       font-size: 0.82rem;
       color: var(--text-muted);
@@ -897,6 +907,7 @@
 
       <div style="margin-top: 24px; display:flex; flex-wrap:wrap; gap:10px;">
         <button class="btn" onclick="submitTeam()">⚽ Build My Program</button>
+        <a class="btn btn-ghost" id="viewTeamLink" href="team.html" style="display:none">👥 View My Team</a>
         <button class="btn btn-ghost" id="downloadBtn" onclick="downloadProfile()" disabled>⬇ Download Profile</button>
         <button class="btn btn-ghost" onclick="document.getElementById('uploadInput').click()">⬆ Upload Profile</button>
         <button class="btn btn-ghost" onclick="resetTeam()">♻ Reset</button>
@@ -1007,7 +1018,8 @@
     // ===== TEAM DATA =====
     let teamData = null;
 
-    // ===== PROFILE + CUSTOMISATION (localStorage + JSON import/export) =====
+    // ===== PROFILE STORAGE (localStorage + JSON import/export) =====
+    // IMPORTANT: team.html must use the same key.
     const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v4';
 
     let lastFormations = null;       // array of 3 formation objects
@@ -1035,17 +1047,6 @@
       };
     }
 
-    function saveProfileToStorage() {
-      try {
-        if (!teamData) return;
-        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(buildProfileObject()));
-        const dl = document.getElementById('downloadBtn');
-        if (dl) dl.disabled = false;
-      } catch (e) {
-        console.warn('Could not save profile:', e);
-      }
-    }
-
     function loadProfileFromStorage() {
       try {
         const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
@@ -1054,6 +1055,21 @@
       } catch (e) {
         console.warn('Could not load profile:', e);
         return null;
+      }
+    }
+
+    // Merge-save so we don't wipe players/gameweeks added by team.html
+    function saveProfileToStorage() {
+      try {
+        if (!teamData) return;
+        const current = buildProfileObject();
+        const existing = loadProfileFromStorage();
+        const merged = existing ? { ...existing, ...current } : current;
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(merged));
+        const dl = document.getElementById('downloadBtn');
+        if (dl) dl.disabled = false;
+      } catch (e) {
+        console.warn('Could not save profile:', e);
       }
     }
 
@@ -1068,7 +1084,8 @@
       }
 
       saveProfileToStorage();
-      const profile = buildProfileObject();
+      const profile = loadProfileFromStorage() || buildProfileObject();
+
       const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
 
@@ -1083,6 +1100,11 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    }
+
+    function showViewTeamLink() {
+      const a = document.getElementById('viewTeamLink');
+      if (a) a.style.display = 'inline-flex';
     }
 
     function applyTeamToUI(team) {
@@ -1104,7 +1126,7 @@
 
       // Badge
       document.getElementById('badgeTeamName').textContent = team.teamName || '—';
-      document.getElementById('badgeTeamInfo').textContent = `${team.onField}v${team.onField} · ${team.squadSize} players · ${team.ageGroup} · ${team.genderDetail}`;
+      document.getElementById('badgeTeamInfo').textContent = `${team.onField}v${team.onField} · ${team.squadSize} players · ${team.ageGroup} · ${team.genderDetail || team.gender}`;
       document.getElementById('formationBadge').classList.add('visible');
 
       const dl = document.getElementById('downloadBtn');
@@ -1125,27 +1147,33 @@
         playerTraining = profile.playerTraining || { selectedCategory: 'dribbling', stageByCategory: {} };
 
         applyTeamToUI(teamData);
+        showViewTeamLink();
 
-        // Formations
+        // Unlock sections
         unlockSection('formation');
+        unlockSection('training');
+        unlockSection('player');
+
+        // Render formations
         if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
+          document.getElementById('formationLoader').classList.remove('visible');
           renderFormationsFromData(lastFormations);
         } else {
           await generateFormations();
         }
 
-        // Training
-        unlockSection('training');
+        // Render training
         if (lastTrainingWeeks && Array.isArray(lastTrainingWeeks) && lastTrainingWeeks.length) {
+          document.getElementById('trainingLoader').classList.remove('visible');
           renderTrainingFromData(lastTrainingWeeks);
         } else {
           await generateTraining();
         }
 
-        // Player training
-        unlockSection('player');
+        // Render player training
         await generatePlayerTraining();
 
+        // Save merged
         saveProfileToStorage();
       } catch (e) {
         console.error('Profile upload failed:', e);
@@ -1181,6 +1209,10 @@
       document.getElementById('formationsGrid').innerHTML = '';
       document.getElementById('weeksNav').innerHTML = '';
       document.getElementById('weeksContainer').innerHTML = '';
+
+      const view = document.getElementById('viewTeamLink');
+      if (view) view.style.display = 'none';
+
       const dl = document.getElementById('downloadBtn');
       if (dl) dl.disabled = true;
     }
@@ -1231,6 +1263,7 @@
       };
 
       saveProfileToStorage();
+      showViewTeamLink();
 
       // Badge
       document.getElementById('badgeTeamName').textContent = teamName;
@@ -1389,7 +1422,6 @@
     function resetFormationPositions(formationStr) {
       if (formationOverrides[formationStr]) delete formationOverrides[formationStr];
 
-      // Update DOM immediately
       const card = Array.from(document.querySelectorAll('.formation-card')).find(c => c.getAttribute('data-formation') === formationStr);
       if (card) {
         const dots = card.querySelectorAll('.player-dot');
@@ -1401,6 +1433,7 @@
           });
         }
       }
+
       saveProfileToStorage();
     }
 
@@ -1476,7 +1509,7 @@
       applySelectedFormationUI();
     }
 
-    // ===== OFFLINE (NO-AI) GENERATORS =====
+    // ===== OFFLINE GENERATORS =====
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
     function normaliseAge(ageGroup) {
@@ -1548,10 +1581,7 @@
       const ageKey = normaliseAge(ageGroup);
       const base = FORMATIONS_BY_SIZE[onField] || [];
       const note = ageNote(ageKey);
-      return base.map(f => ({
-        ...f,
-        summary: `${f.summary} ${note}`
-      }));
+      return base.map(f => ({ ...f, summary: `${f.summary} ${note}` }));
     }
 
     async function generateFormations() {
@@ -2087,7 +2117,6 @@
     async function generatePlayerTraining() {
       try {
         await sleep(250);
-        // Ensure default stage
         if (!playerTraining.selectedCategory) playerTraining.selectedCategory = 'dribbling';
         if (!playerTraining.stageByCategory[playerTraining.selectedCategory]) playerTraining.stageByCategory[playerTraining.selectedCategory] = 1;
 
@@ -2124,8 +2153,9 @@
       playerTraining = saved.playerTraining || { selectedCategory: 'dribbling', stageByCategory: {} };
 
       applyTeamToUI(teamData);
+      showViewTeamLink();
 
-      // Unlock sections
+      // Unlock
       unlockSection('formation');
       unlockSection('training');
       unlockSection('player');
