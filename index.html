@@ -32,6 +32,7 @@
       overflow-x: hidden;
     }
 
+    /* ===== BACKGROUND ===== */
     body::before {
       content: '';
       position: fixed;
@@ -46,6 +47,7 @@
       z-index: 0;
     }
 
+    /* ===== HEADER ===== */
     header {
       z-index: 10;
       padding: 0 40px;
@@ -78,7 +80,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    nav { display: flex; gap: 28px; align-items: center; }
+    nav { display: flex; gap: 26px; align-items: center; }
 
     nav a {
       color: var(--text-muted);
@@ -92,6 +94,7 @@
 
     nav a:hover { color: var(--lime); }
 
+    /* ===== MAIN ===== */
     main {
       position: relative;
       z-index: 1;
@@ -100,6 +103,7 @@
       padding: 60px 24px 100px;
     }
 
+    /* ===== HERO ===== */
     .hero {
       text-align: center;
       padding: 60px 0 80px;
@@ -131,7 +135,7 @@
 
     .hero-desc {
       margin: 28px auto 0;
-      max-width: 650px;
+      max-width: 700px;
       color: var(--text-muted);
       font-size: 1.1rem;
       line-height: 1.7;
@@ -165,6 +169,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ===== SECTION CARD ===== */
     .section-card {
       background: rgba(13,31,21,0.7);
       border: 1px solid var(--border);
@@ -211,6 +216,7 @@
       margin-bottom: 28px;
     }
 
+    /* ===== FORM ELEMENTS ===== */
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -259,6 +265,7 @@
     }
     .mixed-fields.visible { display: grid; }
 
+    /* ===== BUTTON ===== */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -283,6 +290,8 @@
       box-shadow: 0 8px 24px rgba(184,240,38,0.3);
     }
 
+    .btn:active { transform: translateY(0); }
+
     .btn:disabled {
       background: rgba(184,240,38,0.3);
       color: rgba(0,0,0,0.5);
@@ -299,6 +308,7 @@
 
     .btn-ghost:hover { background: rgba(184,240,38,0.1); }
 
+    /* ===== TEAM INFO BADGE ===== */
     .team-badge {
       display: none;
       align-items: center;
@@ -309,10 +319,12 @@
       padding: 16px 24px;
       margin-bottom: 28px;
     }
+
     .team-badge.visible { display: flex; }
     .team-badge .badge-name { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; color: var(--lime); }
     .team-badge .badge-info { font-size: 0.85rem; color: var(--text-muted); }
 
+    /* ===== LOCKED ===== */
     .locked-msg {
       display: none;
       flex-direction: column;
@@ -322,10 +334,12 @@
       text-align: center;
       color: var(--text-muted);
     }
+
     .locked-msg.visible { display: flex; }
     .locked-msg .lock-icon { font-size: 2rem; opacity: 0.4; }
     .locked-msg p { font-size: 0.9rem; }
 
+    /* ===== LOADER ===== */
     .loader {
       display: none;
       flex-direction: column;
@@ -334,8 +348,11 @@
       padding: 60px 0;
       color: var(--text-muted);
     }
+
     .loader.visible { display: flex; }
+
     .loader-balls { display: flex; gap: 12px; }
+
     .loader-ball {
       width: 12px;
       height: 12px;
@@ -343,20 +360,23 @@
       background: var(--lime);
       animation: bounce 0.8s ease-in-out infinite;
     }
+
     .loader-ball:nth-child(2) { animation-delay: 0.2s; }
     .loader-ball:nth-child(3) { animation-delay: 0.4s; }
+
     @keyframes bounce {
       0%, 100% { transform: translateY(0); opacity: 1; }
       50% { transform: translateY(-16px); opacity: 0.5; }
     }
 
-    /* ===== FORMATIONS ===== */
+    /* ===== FORMATION GRAPHIC ===== */
     .formations-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 24px;
       margin-top: 8px;
     }
+
     @media (max-width: 768px) { .formations-grid { grid-template-columns: 1fr; } }
 
     .formation-card {
@@ -367,16 +387,19 @@
       transition: border-color 0.2s, transform 0.2s;
       cursor: default;
     }
+
     .formation-card:hover {
       border-color: rgba(184,240,38,0.5);
       transform: translateY(-3px);
     }
 
+    /* ===== FORMATION SELECTION, DRAG & RESET ===== */
     .formation-card.selectable { cursor: pointer; }
     .formation-card.selected {
       border-color: rgba(184,240,38,0.75);
       box-shadow: 0 10px 26px rgba(184,240,38,0.18);
     }
+
     .formation-card.selected .formation-title { background: rgba(184,240,38,0.14); }
 
     .formation-title {
@@ -397,6 +420,7 @@
       overflow: hidden;
     }
 
+    /* Pitch markings */
     .formation-field::before {
       content: '';
       position: absolute;
@@ -407,16 +431,57 @@
     }
 
     .field-marking { position: absolute; pointer-events: none; }
-    .line-center { top: 50%; left: 8px; right: 8px; height: 1.5px; background: rgba(255,255,255,0.2); transform: translateY(-50%); }
-    .circle-center { width: 18%; aspect-ratio: 1; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.2); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .box-top, .box-bottom { width: 40%; height: 16%; border: 1.5px solid rgba(255,255,255,0.2); left: 50%; transform: translateX(-50%); }
+
+    /* center line */
+    .line-center {
+      top: 50%; left: 8px; right: 8px;
+      height: 1.5px;
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-50%);
+    }
+
+    /* center circle */
+    .circle-center {
+      width: 18%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* penalty boxes */
+    .box-top, .box-bottom {
+      width: 40%; height: 16%;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
     .box-top { top: 8px; border-top: none; }
     .box-bottom { bottom: 8px; border-bottom: none; }
-    .goalbox-top, .goalbox-bottom { width: 20%; height: 7%; border: 1.5px solid rgba(255,255,255,0.2); left: 50%; transform: translateX(-50%); }
+
+    /* goal boxes */
+    .goalbox-top, .goalbox-bottom {
+      width: 20%; height: 7%;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
     .goalbox-top { top: 8px; border-top: none; }
     .goalbox-bottom { bottom: 8px; border-bottom: none; }
 
-    .player-dot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 5; transition: transform 0.2s; touch-action: none; }
+    /* player dots */
+    .player-dot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 5;
+      transition: transform 0.2s;
+      touch-action: none;
+    }
+
     .player-dot:hover { transform: translate(-50%, -50%) scale(1.2); }
     .player-dot.dragging { opacity: 0.9; }
     .player-dot.dragging .player-tooltip { display: none !important; }
@@ -436,8 +501,10 @@
       font-weight: 700;
       box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
+
     .dot-circle.gk { background: #ffa500; }
 
+    /* Player tooltip */
     .player-tooltip {
       display: none;
       position: absolute;
@@ -452,23 +519,57 @@
       pointer-events: none;
       line-height: 1.5;
     }
+
     .player-dot:hover .player-tooltip { display: block; }
-    .player-tooltip strong { color: var(--lime); display: block; margin-bottom: 4px; font-size: 0.8rem; }
+    .player-tooltip strong {
+      color: var(--lime);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
 
     .formation-info { padding: 16px; }
-    .formation-info h4 { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--lime); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-    .formation-info p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
 
-    .sw-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .sw-tag { padding: 3px 10px; border-radius: 100px; font-size: 0.7rem; font-family: 'Space Mono', monospace; }
+    .formation-info h4 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--lime);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .formation-info p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .sw-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .sw-tag {
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-family: 'Space Mono', monospace;
+    }
+
     .sw-tag.strength { background: rgba(184,240,38,0.15); color: var(--lime); border: 1px solid rgba(184,240,38,0.3); }
     .sw-tag.weakness { background: rgba(255,68,68,0.1); color: #ff8080; border: 1px solid rgba(255,68,68,0.3); }
 
     .formation-reset { margin-top: 10px; width: 100%; justify-content: center; }
 
+    /* ===== CONTENT AREA ===== */
     .section-content { display: none; }
     .section-content.visible { display: block; }
 
+    /* ===== ERROR ===== */
     .error-msg {
       background: rgba(255,68,68,0.1);
       border: 1px solid rgba(255,68,68,0.3);
@@ -479,8 +580,153 @@
       margin-top: 12px;
       display: none;
     }
+
     .error-msg.visible { display: block; }
 
+    /* ===== STEP 3 (SQUAD) ===== */
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .roster-grid input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(184,240,38,0.2);
+      border-radius: 10px;
+      color: var(--white);
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .roster-grid input:focus {
+      border-color: var(--lime);
+      background: rgba(184,240,38,0.06);
+    }
+
+    /* ===== STEP 4 (GAMEWEEKS) ===== */
+    .gameweek-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .gameweek {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .gameweek-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .gameweek-header h3 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      color: var(--lime);
+    }
+
+    .gameweek-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .gameweek-layout { grid-template-columns: 1fr; }
+    }
+
+    /* mini pitch */
+    .mini-field {
+      border: 1px solid rgba(184,240,38,0.25);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(26,74,46,0.65);
+    }
+
+    .mini-field .formation-title {
+      font-size: 1.1rem;
+      padding: 10px 12px;
+    }
+
+    .mini-field .formation-field {
+      aspect-ratio: 2/3;
+    }
+
+    .mini-field .dot-circle {
+      width: 22px;
+      height: 22px;
+      font-size: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(184,240,38,0.12);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .yn-select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(184,240,38,0.2);
+      color: var(--white);
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    .yn-select:focus {
+      border-color: var(--lime);
+      background: rgba(184,240,38,0.06);
+    }
+
+    .pom-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .pom-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--lime);
+    }
+
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 600px) {
       header { padding: 0 20px; }
       nav { gap: 16px; }
@@ -488,6 +734,7 @@
       main { padding: 40px 16px 80px; }
     }
 
+    /* ===== SCROLL REVEAL ===== */
     .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.5s, transform 0.5s; }
     .reveal.revealed { opacity: 1; transform: none; }
   </style>
@@ -499,23 +746,25 @@
     <nav>
       <a href="#team">Team</a>
       <a href="#formation">Formation</a>
-      <a href="training.html">Training</a>
+      <a href="#squad">Squad</a>
+      <a href="#gameweeks">Gameweeks</a>
     </nav>
   </header>
 
   <main>
+    <!-- HERO -->
     <section class="hero">
       <div class="hero-eyebrow">Coaching Platform</div>
       <h1>COACH<br /><span>SMARTER</span></h1>
-      <p class="hero-desc">Build your team profile and set your tactical shape. Training plans and individual programs live on the <strong>Training</strong> page.</p>
+      <p class="hero-desc">Set your team, pick a formation, enter your squad, then track match attendance and Player of the Match each gameweek — complete with a formation snapshot.</p>
       <div class="hero-pills">
         <span class="pill">⚡ Formation Builder</span>
-        <span class="pill">📋 Training Plans</span>
-        <span class="pill">👤 Player Development</span>
+        <span class="pill">👥 Squad Management</span>
+        <span class="pill">🗓️ Gameweek Tracker</span>
       </div>
     </section>
 
-    <!-- STEP 1 -->
+    <!-- SECTION 1: TEAM SETUP -->
     <section class="section-card reveal" id="team">
       <div class="section-num">01</div>
       <div class="section-label">Step One</div>
@@ -577,16 +826,14 @@
 
       <div style="margin-top: 24px; display:flex; flex-wrap:wrap; gap:10px;">
         <button class="btn" onclick="submitTeam()">⚽ Build My Program</button>
-        <a class="btn btn-ghost" id="viewTeamLink" href="team.html" style="display:none">👥 View My Team</a>
-        <a class="btn btn-ghost" id="trainingLink" href="training.html" style="display:none">📋 Go To Training</a>
         <button class="btn btn-ghost" id="downloadBtn" onclick="downloadProfile()" disabled>⬇ Download Profile</button>
         <button class="btn btn-ghost" onclick="document.getElementById('uploadInput').click()">⬆ Upload Profile</button>
-        <button class="btn btn-ghost" onclick="resetTeam()">♻ Reset</button>
+        <button class="btn btn-ghost" onclick="resetAll()">♻ Reset</button>
         <input type="file" id="uploadInput" accept="application/json" style="display:none" />
       </div>
     </section>
 
-    <!-- STEP 2 -->
+    <!-- SECTION 2: FORMATION -->
     <section class="section-card reveal" id="formation">
       <div class="section-num">02</div>
       <div class="section-label">Step Two</div>
@@ -606,7 +853,11 @@
       </div>
 
       <div class="loader" id="formationLoader">
-        <div class="loader-balls"><div class="loader-ball"></div><div class="loader-ball"></div><div class="loader-ball"></div></div>
+        <div class="loader-balls">
+          <div class="loader-ball"></div>
+          <div class="loader-ball"></div>
+          <div class="loader-ball"></div>
+        </div>
         <p style="font-size:0.85rem">Analysing optimal formations...</p>
       </div>
 
@@ -617,41 +868,84 @@
         <div class="formations-grid" id="formationsGrid"></div>
       </div>
     </section>
+
+    <!-- SECTION 3: SQUAD LIST -->
+    <section class="section-card reveal" id="squad">
+      <div class="section-num">03</div>
+      <div class="section-label">Step Three</div>
+      <h2>Squad List</h2>
+
+      <div class="locked-msg visible" id="squadLocked">
+        <div class="lock-icon">🔒</div>
+        <p>Submit your team details in Section 1 to add your squad list.</p>
+      </div>
+
+      <div class="section-content" id="squadContent">
+        <p style="color:var(--text-muted);margin:0 0 12px;font-size:0.9rem">
+          Enter player names (up to your squad size) and click <strong>Save Squad</strong>. These names populate the Gameweek Tracker.
+        </p>
+        <div class="roster-grid" id="rosterGrid"></div>
+        <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="btn" id="saveSquadBtn">💾 Save Squad</button>
+          <button class="btn btn-ghost" id="clearSquadBtn">🧹 Clear Names</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: GAMEWEEK TRACKER -->
+    <section class="section-card reveal" id="gameweeks">
+      <div class="section-num">04</div>
+      <div class="section-label">Step Four</div>
+      <h2>Gameweek Tracker</h2>
+
+      <div class="locked-msg visible" id="gameweeksLocked">
+        <div class="lock-icon">🔒</div>
+        <p>Save your squad in Section 3 to unlock the Gameweek Tracker.</p>
+      </div>
+
+      <div class="section-content" id="gameweeksContent">
+        <p style="color:var(--text-muted);margin:0 0 12px;font-size:0.9rem">
+          For each gameweek, mark Attendance (Y/N) and choose one <strong>Player of the Match</strong>. Each gameweek stores a snapshot of your selected formation.
+        </p>
+
+        <div class="gameweek-controls">
+          <button class="btn" id="addGameweekBtn">➕ Add Gameweek</button>
+          <button class="btn btn-ghost" id="resetTrackerBtn">♻ Reset Tracker</button>
+        </div>
+
+        <div id="gameweeksContainer"></div>
+      </div>
+    </section>
+
   </main>
 
   <script>
-    // ===== Scroll reveal =====
+    // ===== SCROLL REVEAL =====
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // ===== Gender toggle =====
+    // ===== GENDER TOGGLE =====
     document.getElementById('gender').addEventListener('change', function() {
       document.getElementById('mixedFields').classList.toggle('visible', this.value === 'mixed');
     });
 
-    // ===== Profile (shared across pages) =====
-    // IMPORTANT: keep in sync with team.html and training.html
+    // ===== PROFILE STORAGE =====
+    // Keep this key consistent if you have older stored profiles.
     const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v4';
 
+    // ===== APP STATE =====
     let teamData = null;
     let lastFormations = null;
     let selectedFormation = null;
     let formationOverrides = {};
 
-    function buildProfileObject() {
-      // NOTE: This page only owns team + formations.
-      // Training/player plans are created on training.html.
-      return {
-        version: 4,
-        savedAt: new Date().toISOString(),
-        team: teamData,
-        formations: lastFormations,
-        selectedFormation,
-        formationOverrides
-      };
-    }
+    let players = []; // array of player names
+    let gameweeks = []; // array of { week, formation, positions, attendance, pom }
+
+    // ===== Helpers =====
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
     function loadProfile() {
       try {
@@ -664,13 +958,25 @@
       }
     }
 
-    // Merge-save so we don't wipe players/gameweeks/training created on other pages
+    function buildProfileObject() {
+      return {
+        version: 4,
+        savedAt: new Date().toISOString(),
+        team: teamData,
+        formations: lastFormations,
+        selectedFormation,
+        formationOverrides,
+        players,
+        gameweeks
+      };
+    }
+
+    // Merge save so we never wipe keys added by older versions.
     function saveProfileMerged() {
       try {
-        if (!teamData) return;
+        const existing = loadProfile() || {};
         const current = buildProfileObject();
-        const existing = loadProfile();
-        const merged = existing ? { ...existing, ...current } : current;
+        const merged = { ...existing, ...current, savedAt: new Date().toISOString() };
         localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(merged));
         const dl = document.getElementById('downloadBtn');
         if (dl) dl.disabled = false;
@@ -689,7 +995,7 @@
         alert('Please build or upload a team profile first.');
         return;
       }
-      // Save latest merge
+      // Ensure latest merge
       teamData = profile.team;
       saveProfileMerged();
       const merged = loadProfile() || profile;
@@ -710,51 +1016,84 @@
       URL.revokeObjectURL(url);
     }
 
-    function showLinks() {
-      const a = document.getElementById('viewTeamLink');
-      const t = document.getElementById('trainingLink');
-      if (a) a.style.display = 'inline-flex';
-      if (t) t.style.display = 'inline-flex';
-    }
-
     async function handleProfileUpload(file) {
       try {
         const txt = await file.text();
         const profile = JSON.parse(txt);
         if (!profile || typeof profile !== 'object' || !profile.team) throw new Error('Invalid profile file');
 
-        // Save file as-is (so we keep players/gameweeks/training)
+        // Save as-is to preserve all keys.
         localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
 
-        // Apply local state for this page
+        // Hydrate app state
         teamData = profile.team;
         lastFormations = profile.formations || null;
         selectedFormation = profile.selectedFormation || null;
         formationOverrides = profile.formationOverrides || {};
+        players = Array.isArray(profile.players) ? profile.players : [];
+        gameweeks = Array.isArray(profile.gameweeks) ? profile.gameweeks : [];
 
         applyTeamToUI(teamData);
-        showLinks();
-
         unlockSection('formation');
+        unlockSection('squad');
 
-        if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
+        if (lastFormations && lastFormations.length) {
           document.getElementById('formationLoader').classList.remove('visible');
           renderFormationsFromData(lastFormations);
         } else {
           await generateFormations();
         }
+
+        renderSquad();
+        reconcileGameweeks();
+        renderGameweeks();
+
+        saveProfileMerged();
       } catch (e) {
         console.error('Profile upload failed:', e);
-        alert('Could not load that profile file.');
+        alert('Could not load that profile file. Please ensure it is a valid Pitch Perfect export.');
       }
     }
 
-    function resetTeam() {
+    function unlockSection(id) {
+      const locked = document.getElementById(id + 'Locked');
+      const loader = document.getElementById(id + 'Loader');
+      const content = document.getElementById(id + 'Content');
+      if (locked) locked.classList.remove('visible');
+      if (loader) loader.classList.add('visible');
+      if (content) content.classList.remove('visible');
+    }
+
+    function showContent(id) {
+      const loader = document.getElementById(id + 'Loader');
+      const content = document.getElementById(id + 'Content');
+      if (loader) loader.classList.remove('visible');
+      if (content) content.classList.add('visible');
+    }
+
+    function showLocked(id, msg) {
+      const locked = document.getElementById(id + 'Locked');
+      const content = document.getElementById(id + 'Content');
+      const loader = document.getElementById(id + 'Loader');
+      if (loader) loader.classList.remove('visible');
+      if (content) content.classList.remove('visible');
+      if (locked) {
+        locked.classList.add('visible');
+        if (msg) {
+          const p = locked.querySelector('p');
+          if (p) p.textContent = msg;
+        }
+      }
+    }
+
+    function resetAll() {
       clearProfile();
       teamData = null;
       lastFormations = null;
       selectedFormation = null;
       formationOverrides = {};
+      players = [];
+      gameweeks = [];
 
       ['teamName','squadSize','onField','numFemales','numMales'].forEach(id => {
         const el = document.getElementById(id);
@@ -766,27 +1105,23 @@
 
       document.getElementById('formationBadge').classList.remove('visible');
 
-      document.getElementById('formationLocked').classList.add('visible');
-      document.getElementById('formationLoader').classList.remove('visible');
-      document.getElementById('formationContent').classList.remove('visible');
-      document.getElementById('formationsGrid').innerHTML = '';
+      showLocked('formation', 'Submit your team details in Section 1 to unlock formation recommendations.');
+      showLocked('squad', 'Submit your team details in Section 1 to add your squad list.');
+      showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
 
-      const a = document.getElementById('viewTeamLink');
-      const t = document.getElementById('trainingLink');
-      if (a) a.style.display = 'none';
-      if (t) t.style.display = 'none';
+      document.getElementById('formationsGrid').innerHTML = '';
+      document.getElementById('rosterGrid').innerHTML = '';
+      document.getElementById('gameweeksContainer').innerHTML = '';
 
       const dl = document.getElementById('downloadBtn');
       if (dl) dl.disabled = true;
     }
 
-    // ===== Unlock helpers =====
-    function unlockSection(id) {
-      document.getElementById(id + 'Locked').classList.remove('visible');
-      document.getElementById(id + 'Loader').classList.add('visible');
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>\"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
     }
 
-    // ===== Submit team =====
+    // ===== TEAM SUBMIT =====
     async function submitTeam() {
       const teamName = document.getElementById('teamName').value.trim();
       const squadSize = document.getElementById('squadSize').value;
@@ -831,17 +1166,26 @@
         numMales
       };
 
-      saveProfileMerged();
-      showLinks();
-
-      // Badge
+      // Update badge
       document.getElementById('badgeTeamName').textContent = teamName;
       document.getElementById('badgeTeamInfo').textContent = `${onField}v${onField} · ${squadSize} players · ${ageGroup} · ${genderDetail}`;
       document.getElementById('formationBadge').classList.add('visible');
 
-      // Generate formations
+      // Unlock formation + squad
       unlockSection('formation');
+      unlockSection('squad');
+
+      saveProfileMerged();
+
+      // Generate formations
       generateFormations();
+
+      // Render squad inputs
+      renderSquad();
+      showContent('squad');
+
+      // Lock gameweeks until squad saved
+      showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
     }
 
     function applyTeamToUI(team) {
@@ -869,7 +1213,23 @@
       if (dl) dl.disabled = false;
     }
 
-    // ===== Formation rendering =====
+    // ===== FORMATION POSITIONS =====
+    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+    function computeDefaultDotPositions(formationStr) {
+      const parts = (formationStr || '').split('-').map(Number);
+      const totalRows = parts.length;
+      const positions = [];
+      parts.forEach((count, rowIndex) => {
+        const y = 85 - (rowIndex / (totalRows - 1)) * 70;
+        for (let i = 0; i < count; i++) {
+          const x = count === 1 ? 50 : 15 + (i / (count - 1)) * 70;
+          positions.push({ x, y });
+        }
+      });
+      return positions;
+    }
+
     const PLAYER_ROLES = {
       GK: { name: 'Goalkeeper', desc: 'Last line of defence. Commands the box, organises defenders, and distributes quickly to restart attacks.' },
       CB: { name: 'Centre Back', desc: 'Anchors the defence. Wins headers, tackles, and maintains a compact defensive line.' },
@@ -897,6 +1257,52 @@
       return 'CM';
     }
 
+    function setSelectedFormation(formationStr) {
+      selectedFormation = formationStr;
+      saveProfileMerged();
+      applySelectedFormationUI();
+    }
+
+    function applySelectedFormationUI() {
+      document.querySelectorAll('.formation-card').forEach(card => {
+        const f = card.getAttribute('data-formation');
+        card.classList.toggle('selected', !!selectedFormation && f === selectedFormation);
+      });
+    }
+
+    function readCardPositions(cardEl) {
+      return Array.from(cardEl.querySelectorAll('.player-dot')).map(d => ({
+        x: parseFloat(d.style.left) || 50,
+        y: parseFloat(d.style.top) || 50
+      }));
+    }
+
+    function saveCardOverride(cardEl) {
+      const formationStr = cardEl.getAttribute('data-formation');
+      if (!formationStr) return;
+      formationOverrides[formationStr] = readCardPositions(cardEl);
+      saveProfileMerged();
+    }
+
+    function resetFormationPositions(formationStr) {
+      if (formationOverrides[formationStr]) delete formationOverrides[formationStr];
+
+      // Update DOM immediately
+      const card = Array.from(document.querySelectorAll('.formation-card')).find(c => c.getAttribute('data-formation') === formationStr);
+      if (card) {
+        const dots = card.querySelectorAll('.player-dot');
+        const defaults = computeDefaultDotPositions(formationStr);
+        if (defaults.length === dots.length) {
+          dots.forEach((d, idx) => {
+            d.style.left = defaults[idx].x.toFixed(2) + '%';
+            d.style.top = defaults[idx].y.toFixed(2) + '%';
+          });
+        }
+      }
+
+      saveProfileMerged();
+    }
+
     function renderFormationCard(f) {
       const parts = f.formation.split('-').map(Number);
       const totalRows = parts.length;
@@ -912,6 +1318,7 @@
         }
       });
 
+      // Apply saved overrides (if any)
       const override = formationOverrides[f.formation];
       if (override && Array.isArray(override) && override.length === positions.length) {
         override.forEach((o, idx) => {
@@ -935,12 +1342,12 @@
         `;
       }).join('');
 
-      const strengthTags = (f.strengths || []).map(s => `<span class="sw-tag strength">✓ ${s}</span>`).join('');
-      const weaknessTags = (f.weaknesses || []).map(w => `<span class="sw-tag weakness">✗ ${w}</span>`).join('');
+      const strengthTags = (f.strengths || []).map(s => `<span class="sw-tag strength">✓ ${escapeHtml(s)}</span>`).join('');
+      const weaknessTags = (f.weaknesses || []).map(w => `<span class="sw-tag weakness">✗ ${escapeHtml(w)}</span>`).join('');
 
       return `
-        <div class="formation-card" data-formation="${f.formation}">
-          <div class="formation-title">${f.formation}</div>
+        <div class="formation-card" data-formation="${escapeHtml(f.formation)}">
+          <div class="formation-title">${escapeHtml(f.formation)}</div>
           <div class="formation-field">
             <div class="field-marking line-center"></div>
             <div class="field-marking circle-center"></div>
@@ -952,51 +1359,12 @@
           </div>
           <div class="formation-info">
             <h4>Overview</h4>
-            <p>${f.summary}</p>
+            <p>${escapeHtml(f.summary)}</p>
             <div class="sw-tags">${strengthTags}${weaknessTags}</div>
-            <button class="btn btn-ghost formation-reset" onclick="event.stopPropagation(); resetFormationPositions('${f.formation}');">Reset</button>
+            <button class="btn btn-ghost formation-reset" onclick="event.stopPropagation(); resetFormationPositions('${escapeHtml(f.formation)}');">Reset</button>
           </div>
         </div>
       `;
-    }
-
-    function setSelectedFormation(formationStr) {
-      selectedFormation = formationStr;
-      saveProfileMerged();
-      applySelectedFormationUI();
-    }
-
-    function applySelectedFormationUI() {
-      document.querySelectorAll('.formation-card').forEach(card => {
-        const f = card.getAttribute('data-formation');
-        card.classList.toggle('selected', !!selectedFormation && f === selectedFormation);
-      });
-    }
-
-    function saveCardOverride(cardEl) {
-      const formationStr = cardEl.getAttribute('data-formation');
-      if (!formationStr) return;
-      formationOverrides[formationStr] = Array.from(cardEl.querySelectorAll('.player-dot')).map(d => ({
-        x: parseFloat(d.style.left) || 50,
-        y: parseFloat(d.style.top) || 50
-      }));
-      saveProfileMerged();
-    }
-
-    function resetFormationPositions(formationStr) {
-      if (formationOverrides[formationStr]) delete formationOverrides[formationStr];
-      const card = Array.from(document.querySelectorAll('.formation-card')).find(c => c.getAttribute('data-formation') === formationStr);
-      if (card) {
-        const dots = card.querySelectorAll('.player-dot');
-        const defaults = computeDefaultDotPositions(formationStr);
-        if (defaults.length === dots.length) {
-          dots.forEach((d, idx) => {
-            d.style.left = defaults[idx].x.toFixed(2) + '%';
-            d.style.top = defaults[idx].y.toFixed(2) + '%';
-          });
-        }
-      }
-      saveProfileMerged();
     }
 
     function wireFormationInteractions() {
@@ -1037,8 +1405,10 @@
           const move = (e) => {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
+
             const cx = clamp(x, halfW, rect.width - halfW);
             const cy = clamp(y, halfH, rect.height - halfH);
+
             dot.style.left = ((cx / rect.width) * 100).toFixed(2) + '%';
             dot.style.top  = ((cy / rect.height) * 100).toFixed(2) + '%';
           };
@@ -1059,6 +1429,7 @@
     }
 
     function renderFormationsFromData(formations) {
+      document.getElementById('formationLocked').classList.remove('visible');
       document.getElementById('formationLoader').classList.remove('visible');
       const grid = document.getElementById('formationsGrid');
       grid.innerHTML = (formations || []).map(f => renderFormationCard(f)).join('');
@@ -1067,9 +1438,9 @@
       applySelectedFormationUI();
     }
 
-    // ===== Offline formation generator =====
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
+    // ================================
+    // OFFLINE (NO-AI) FORMATION GENERATOR
+    // ================================
     function normaliseAge(ageGroup) {
       const a = (ageGroup || '').toLowerCase();
       if (a.includes('under 8')) return 'u8';
@@ -1099,40 +1470,40 @@
 
     const FORMATIONS_BY_SIZE = {
       5: [
-        { formation: '1-2-1-1', summary: 'Balanced with two defenders, one central link, and one forward. Great for simple spacing and quick transitions.', strengths: ['Clear roles', 'Good balance'], weaknesses: ['Midfielder can be overloaded', 'Needs wide support'] },
-        { formation: '1-1-2-1', summary: 'One defender anchors, two mids provide width, and one forward stays high. Encourages passing lanes and width.', strengths: ['Natural width', 'Simple triangles'], weaknesses: ['Single defender can be isolated', 'Requires tracking back'] },
-        { formation: '1-1-1-2', summary: 'Two forwards stay high and press early. Useful if you want more goals and aggressive defending from the front.', strengths: ['Strong high press', 'More scoring presence'], weaknesses: ['Midfield can be outnumbered', 'Space behind midfield'] },
+        { formation: '1-2-1-1', summary: 'Balanced with two defenders, one central link, and one forward. Great for simple spacing and quick transitions.', strengths: ['Clear roles', 'Good balance', 'Easy to coach'], weaknesses: ['Midfielder can be overloaded', 'Needs wide support in attack'] },
+        { formation: '1-1-2-1', summary: 'One defender anchors, two mids provide width, and one forward stays high. Encourages passing lanes and width.', strengths: ['Natural width', 'Simple triangles', 'Supports counterattacks'], weaknesses: ['Single defender can be isolated', 'Requires midfield tracking back'] },
+        { formation: '1-1-1-2', summary: 'Two forwards stay high and press early. Useful if you want more goals and aggressive defending from the front.', strengths: ['Strong high press', 'More scoring presence', 'Quick counters'], weaknesses: ['Midfield can be outnumbered', 'Space behind midfield if possession lost'] },
       ],
       6: [
-        { formation: '1-2-2-1', summary: 'Two defenders, two mids, one forward. Very stable and ideal for building out from the back with support.', strengths: ['Stable shape', 'Good support lines'], weaknesses: ['May lack a second attacker', 'Needs midfield runners'] },
-        { formation: '1-3-1-1', summary: 'Three across the back provides security; one central mid links to a forward. Great for defensive solidity.', strengths: ['Hard to break down', 'Strong coverage'], weaknesses: ['Can be slow in attack', 'Forward may be isolated'] },
-        { formation: '1-1-3-1', summary: 'A single defender with three mids pushes play forward and keeps the ball. Helps dominate possession.', strengths: ['Possession-friendly', 'Many passing options'], weaknesses: ['Single defender vulnerable', 'Needs recovery runs'] },
+        { formation: '1-2-2-1', summary: 'Two defenders, two mids, one forward. Very stable and ideal for building out from the back with support.', strengths: ['Stable shape', 'Good support lines', 'Easy build-up play'], weaknesses: ['May lack a second attacker', 'Needs midfield runners to join attack'] },
+        { formation: '1-3-1-1', summary: 'Three across the back provides security; one central mid links to a forward. Great for defensive solidity.', strengths: ['Hard to break down', 'Strong defensive coverage', 'Good for learning shape'], weaknesses: ['Can be flat/slow in attack', 'Forward may become isolated'] },
+        { formation: '1-1-3-1', summary: 'A single defender with three mids pushes play forward and keeps the ball. Helps dominate possession.', strengths: ['Possession-friendly', 'Lots of passing options', 'Higher field presence'], weaknesses: ['Single defender vulnerable to counters', 'Needs quick recovery runs'] },
       ],
       7: [
-        { formation: '1-2-3-1', summary: 'A classic 7v7 setup: two defenders, three midfielders, one striker. Great balance for width and central control.', strengths: ['Balanced lines', 'Natural width'], weaknesses: ['Striker can be isolated', 'Requires midfield tracking'] },
-        { formation: '1-3-2-1', summary: 'Three defenders for solidity with two mids in front. Great if your team needs structure and confidence.', strengths: ['Defensively strong', 'Clear build-out'], weaknesses: ['Can lack width in midfield', 'Needs fullbacks support'] },
-        { formation: '1-2-2-2', summary: 'Two mids and two forwards create more attacking options. Ideal for combination play near goal.', strengths: ['More attacking presence', 'Good combinations'], weaknesses: ['Midfield can be stretched', 'Two forwards must defend'] },
+        { formation: '1-2-3-1', summary: 'A classic 7v7 setup: two defenders, three midfielders, one striker. Great balance for width and central control.', strengths: ['Balanced lines', 'Natural width + central support', 'Good transitions'], weaknesses: ['Striker can be isolated', 'Requires midfield tracking'] },
+        { formation: '1-3-2-1', summary: 'Three defenders for solidity with two mids in front. Great if your team needs structure and defensive confidence.', strengths: ['Defensively strong', 'Clear build-out shape', 'Limits counterattacks'], weaknesses: ['Can lack width in midfield', 'Needs fullbacks to support attack'] },
+        { formation: '1-2-2-2', summary: 'Two mids and two forwards create more attacking options. Ideal if you want more combination play near goal.', strengths: ['More attacking presence', 'Good combinations', 'High pressing options'], weaknesses: ['Midfield can be stretched', 'Two forwards must defend together'] },
       ],
       8: [
-        { formation: '1-3-3-1', summary: 'Solid 3-3 block with one striker. Encourages compactness and clear roles.', strengths: ['Compact shape', 'Strong midfield unit'], weaknesses: ['Can lack a second attacker', 'Needs wide service'] },
-        { formation: '1-2-3-2', summary: 'Two defenders, three mids, two forwards. Good for pressing and creating multiple finishing angles.', strengths: ['More goalscoring options', 'Strong press'], weaknesses: ['Two defenders exposed', 'Requires discipline'] },
-        { formation: '1-3-2-2', summary: 'Three defenders plus two mids behind two forwards. Blend of stability and counter threat.', strengths: ['Stable base', 'Two-forward threat'], weaknesses: ['Can get outnumbered in midfield', 'Needs connectivity'] },
+        { formation: '1-3-3-1', summary: 'Solid 3-3 block with one striker. Encourages compactness and clear roles while still providing midfield support.', strengths: ['Compact shape', 'Strong midfield unit', 'Easy to maintain structure'], weaknesses: ['Can lack a second attacker', 'Needs wide mids to deliver service'] },
+        { formation: '1-2-3-2', summary: 'Two defenders, three mids, two forwards. Good for pressing and creating multiple finishing angles.', strengths: ['More goalscoring options', 'Strong press', 'Good support around ball'], weaknesses: ['Two defenders can be exposed', 'Requires midfield discipline'] },
+        { formation: '1-3-2-2', summary: 'Three defenders plus two mids behind two forwards. Good blend of stability and counterattacking threat.', strengths: ['Stable base', 'Quick counters', 'Two-forward threat'], weaknesses: ['Can get outnumbered in midfield', 'Needs mids to stay connected'] },
       ],
       9: [
-        { formation: '1-3-3-2', summary: 'Common 9v9: three defenders, three mids, two forwards. Strong balance and clear lanes.', strengths: ['Balanced', 'Two attackers combine'], weaknesses: ['Needs wide support', 'Forwards must press together'] },
-        { formation: '1-4-3-1', summary: 'Four at the back provides security; three mids link to one striker. Great for organised defending.', strengths: ['Defensive stability', 'Good build-up'], weaknesses: ['Striker isolation risk', 'Needs midfield runners'] },
-        { formation: '1-2-4-2', summary: 'Two defenders, four mids, two forwards. Great for dominating midfield and combination play.', strengths: ['Midfield control', 'Many passing options'], weaknesses: ['Space behind mids', 'Exposed wide'] },
+        { formation: '1-3-3-2', summary: 'Common 9v9: three defenders, three mids, two forwards. Offers strong balance and clear progression lanes.', strengths: ['Balanced', 'Strong central presence', 'Two attackers to combine'], weaknesses: ['Needs wide support in build-up', 'Forwards must press together'] },
+        { formation: '1-4-3-1', summary: 'Four at the back provides security; three mids link to one striker. Great for organised defending and build-up.', strengths: ['Defensive stability', 'Good build-up structure', 'Clear roles'], weaknesses: ['Striker isolation risk', 'Requires midfield runners'] },
+        { formation: '1-2-4-2', summary: 'Two defenders, four mids, two forwards. Great for dominating midfield and playing combination soccer.', strengths: ['Midfield control', 'Many passing options', 'Two-forward finishing'], weaknesses: ['Space behind mids if possession lost', 'Defenders can be exposed wide'] },
       ],
       10: [
-        { formation: '1-4-3-2', summary: 'Back four + midfield three with two forwards. Strong structure with attacking presence.', strengths: ['Stable back line', 'Two attackers'], weaknesses: ['Wide areas depend on fullbacks', 'Midfield covers ground'] },
-        { formation: '1-3-4-2', summary: 'Three at the back with four mids gives control and width. Good for possession.', strengths: ['Midfield control', 'Width in build-up'], weaknesses: ['Wing mids work hard', 'Space behind wide mids'] },
-        { formation: '1-4-4-1', summary: 'Strong defensive organisation and clear wide roles. Useful for stability.', strengths: ['Very organised', 'Good wide coverage'], weaknesses: ['Limited central attacking numbers', 'Needs support runs'] },
+        { formation: '1-4-3-2', summary: 'Back four + midfield three with two forwards. Strong structure with more attacking presence than a lone striker.', strengths: ['Stable back line', 'Good central triangles', 'Two attackers to combine'], weaknesses: ['Wide areas depend on fullbacks', 'Midfield must cover lots of ground'] },
+        { formation: '1-3-4-2', summary: 'Three at the back with four mids gives control and width. Good if your team wants to play possession.', strengths: ['Midfield control', 'Width in build-up', 'Flexible attacking options'], weaknesses: ['Wing mids must work hard', 'Space behind wing mids on turnovers'] },
+        { formation: '1-4-4-1', summary: 'Strong defensive organisation and clear wide midfield roles. Useful if your team needs more stability.', strengths: ['Very organised', 'Good wide coverage', 'Hard to play through'], weaknesses: ['Limited central attacking numbers', 'Needs support runs to striker'] },
       ],
       11: [
-        { formation: '1-4-3-3', summary: 'Modern balanced formation: back four, midfield three, front three. Great for width and pressing.', strengths: ['Natural width', 'Strong pressing shape'], weaknesses: ['Needs strong midfield engine', 'Wingers must track back'] },
-        { formation: '1-4-4-2', summary: 'Classic two-striker system that simplifies attacking roles. Great for direct play.', strengths: ['Two attackers present', 'Simple roles'], weaknesses: ['Can be outnumbered in midfield', 'Requires disciplined wide mids'] },
-        { formation: '1-3-5-2', summary: 'Three centre-backs with wingbacks and two forwards. Great for midfield control.', strengths: ['Midfield overload', 'Two-forward combinations'], weaknesses: ['Wingback workload high', 'Space behind wingbacks'] },
-      ]
+        { formation: '1-4-3-3', summary: 'A modern balanced formation: back four, midfield three, front three. Great for width, pressing, and transitions.', strengths: ['Natural width', 'Strong pressing shape', 'Good build-up lanes'], weaknesses: ['Needs strong midfield engine', 'Wingers must track back'] },
+        { formation: '1-4-4-2', summary: 'Classic two-striker system that simplifies attacking roles. Great for direct play and pairing forwards.', strengths: ['Two attackers always present', 'Simple roles', 'Strong counter threat'], weaknesses: ['Can be outnumbered in midfield', 'Requires disciplined wide mids'] },
+        { formation: '1-3-5-2', summary: 'Three centre-backs with wingbacks and two forwards. Good for controlling midfield and quick switching wide.', strengths: ['Midfield overload', 'Wingback width', 'Two-forward combinations'], weaknesses: ['Wingback workload high', 'Space behind wingbacks on counters'] },
+      ],
     };
 
     function pickOfflineFormations(onField, ageGroup) {
@@ -1146,13 +1517,20 @@
       try {
         document.getElementById('formationContent').classList.remove('visible');
         document.getElementById('formationsGrid').innerHTML = '';
+        document.getElementById('formationLoader').classList.add('visible');
+
         await sleep(600);
 
         const formations = pickOfflineFormations(teamData.onField, teamData.ageGroup);
         lastFormations = formations;
+
+        // If nothing selected yet, default to first formation
+        if (!selectedFormation && formations.length) {
+          selectedFormation = formations[0].formation;
+        }
+
         saveProfileMerged();
 
-        document.getElementById('formationLoader').classList.remove('visible');
         renderFormationsFromData(formations);
       } catch (e) {
         console.error('Formation generation failed:', e);
@@ -1162,7 +1540,310 @@
       }
     }
 
-    // ===== Auto-restore =====
+    // ===== STEP 3: SQUAD =====
+    function renderSquad() {
+      if (!teamData) {
+        showLocked('squad', 'Submit your team details in Section 1 to add your squad list.');
+        return;
+      }
+      const grid = document.getElementById('rosterGrid');
+      const squadSize = teamData.squadSize || 0;
+      const current = Array.isArray(players) ? players : [];
+
+      const inputs = [];
+      for (let i = 0; i < squadSize; i++) {
+        const val = current[i] || '';
+        inputs.push(`<input type="text" data-idx="${i}" placeholder="Player ${i+1}" value="${escapeHtml(val)}" />`);
+      }
+      grid.innerHTML = inputs.join('');
+      showContent('squad');
+    }
+
+    function getSquadFromInputs() {
+      const inputs = document.querySelectorAll('#rosterGrid input');
+      const names = Array.from(inputs)
+        .map(i => (i.value || '').trim())
+        .filter(Boolean);
+
+      // De-duplicate (case-insensitive) while preserving order
+      const seen = new Set();
+      const out = [];
+      for (const n of names) {
+        const key = n.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          out.push(n);
+        }
+      }
+      return out;
+    }
+
+    function reconcileGameweeks() {
+      // Ensure at least GW1 exists once squad is saved
+      if (!Array.isArray(gameweeks)) gameweeks = [];
+      if (!players || !players.length) {
+        // no squad => lock tracker
+        showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
+        return;
+      }
+
+      if (!gameweeks.length) {
+        gameweeks = [createNewGameweek(1)];
+      }
+
+      // Ensure each GW has attendance map for current players
+      gameweeks.forEach(gw => {
+        if (!gw.attendance || typeof gw.attendance !== 'object') gw.attendance = {};
+        const nextAtt = {};
+        players.forEach(p => {
+          nextAtt[p] = !!gw.attendance[p];
+        });
+        gw.attendance = nextAtt;
+
+        // Ensure pom valid
+        if (gw.pom && !players.includes(gw.pom)) gw.pom = null;
+
+        // If formation missing, backfill from selected formation
+        if (!gw.formation) gw.formation = selectedFormation || (lastFormations && lastFormations[0] && lastFormations[0].formation) || null;
+        if (!gw.positions || !Array.isArray(gw.positions) || !gw.positions.length) {
+          gw.positions = snapshotPositionsForFormation(gw.formation);
+        }
+      });
+
+      saveProfileMerged();
+      showContent('gameweeks');
+    }
+
+    function snapshotPositionsForFormation(formationStr) {
+      if (!formationStr) return [];
+      const override = formationOverrides && formationOverrides[formationStr];
+      if (override && Array.isArray(override) && override.length) {
+        return override.map(o => ({ x: o.x, y: o.y }));
+      }
+      return computeDefaultDotPositions(formationStr);
+    }
+
+    function createNewGameweek(weekNum) {
+      const formation = selectedFormation || (lastFormations && lastFormations[0] && lastFormations[0].formation) || null;
+      const positions = snapshotPositionsForFormation(formation);
+      const attendance = {};
+      players.forEach(p => attendance[p] = false);
+      return { week: weekNum, formation, positions, attendance, pom: null };
+    }
+
+    function addGameweek() {
+      if (!players || !players.length) return;
+      const maxWeek = gameweeks.reduce((m, gw) => Math.max(m, gw.week || 0), 0);
+      const next = maxWeek + 1;
+      gameweeks.push(createNewGameweek(next));
+      saveProfileMerged();
+      renderGameweeks();
+    }
+
+    function resetTracker() {
+      if (!players || !players.length) return;
+      gameweeks = [createNewGameweek(1)];
+      saveProfileMerged();
+      renderGameweeks();
+    }
+
+    function renderMiniFormation(formationStr, positions) {
+      if (!formationStr) {
+        return `<div class="mini-field"><div class="formation-title">No formation selected</div></div>`;
+      }
+
+      // Determine labels based on formation rows
+      const parts = formationStr.split('-').map(Number);
+      const totalRows = parts.length;
+      const labels = [];
+      parts.forEach((count, rowIndex) => {
+        for (let i = 0; i < count; i++) {
+          labels.push(labelForRow(rowIndex, totalRows, i, count));
+        }
+      });
+
+      const dots = (positions || []).map((p, idx) => {
+        const label = labels[idx] || '';
+        const isGK = idx === 0;
+        return `
+          <div class="player-dot" style="left:${p.x}%;top:${p.y}%; cursor: default;">
+            <div class="dot-circle ${isGK ? 'gk' : ''}">${label}</div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="mini-field">
+          <div class="formation-title">${escapeHtml(formationStr)}</div>
+          <div class="formation-field">
+            <div class="field-marking line-center"></div>
+            <div class="field-marking circle-center"></div>
+            <div class="field-marking box-top"></div>
+            <div class="field-marking box-bottom"></div>
+            <div class="field-marking goalbox-top"></div>
+            <div class="field-marking goalbox-bottom"></div>
+            ${dots}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGameweeks() {
+      if (!players || !players.length) {
+        showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
+        return;
+      }
+      showContent('gameweeks');
+
+      const container = document.getElementById('gameweeksContainer');
+      if (!container) return;
+
+      // Ensure gameweeks exist
+      if (!gameweeks || !gameweeks.length) {
+        reconcileGameweeks();
+      }
+
+      container.innerHTML = (gameweeks || []).map(gw => {
+        const formationHTML = renderMiniFormation(gw.formation, gw.positions);
+
+        const rows = players.map(p => {
+          const attended = gw.attendance && gw.attendance[p] ? 'Y' : 'N';
+          const pomChecked = gw.pom === p;
+          const pomDisabled = !(gw.attendance && gw.attendance[p]);
+
+          return `
+            <tr>
+              <td>${escapeHtml(p)}</td>
+              <td>
+                <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
+                  <option value="N" ${attended === 'N' ? 'selected' : ''}>N</option>
+                  <option value="Y" ${attended === 'Y' ? 'selected' : ''}>Y</option>
+                </select>
+              </td>
+              <td>
+                <label class="pom-wrap">
+                  <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="pom" ${pomChecked ? 'checked' : ''} ${pomDisabled ? 'disabled' : ''} />
+                  POM
+                </label>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <div class="gameweek" id="gw-${gw.week}">
+            <div class="gameweek-header">
+              <h3>Gameweek ${gw.week}</h3>
+              <span class="muted">Formation snapshot: ${escapeHtml(gw.formation || '—')}</span>
+            </div>
+            <div class="gameweek-layout">
+              ${formationHTML}
+              <div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Player name</th>
+                      <th>Attendance (Y/N)</th>
+                      <th>Player of the match</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows || `<tr><td colspan="3" class="muted">Add player names in Step 3 to begin tracking.</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Wire handlers
+      container.querySelectorAll('select[data-field="attendance"]').forEach(sel => {
+        sel.addEventListener('change', (ev) => {
+          const week = parseInt(ev.target.getAttribute('data-week'), 10);
+          const player = ev.target.getAttribute('data-player');
+          const val = ev.target.value === 'Y';
+
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw) return;
+          if (!gw.attendance) gw.attendance = {};
+          gw.attendance[player] = val;
+
+          // If attendance switched to N, remove POM if it was this player
+          if (!val && gw.pom === player) gw.pom = null;
+
+          saveProfileMerged();
+          // Re-render to update disabled POM states
+          renderGameweeks();
+        });
+      });
+
+      container.querySelectorAll('input[type="checkbox"][data-field="pom"]').forEach(chk => {
+        chk.addEventListener('change', (ev) => {
+          const week = parseInt(ev.target.getAttribute('data-week'), 10);
+          const player = ev.target.getAttribute('data-player');
+          const checked = ev.target.checked;
+
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw) return;
+
+          // Enforce exactly one POM (or none)
+          if (checked) {
+            gw.pom = player;
+          } else {
+            if (gw.pom === player) gw.pom = null;
+          }
+
+          saveProfileMerged();
+          renderGameweeks();
+        });
+      });
+    }
+
+    // ===== Wire Squad buttons =====
+    function wireSquadButtons() {
+      const saveBtn = document.getElementById('saveSquadBtn');
+      const clearBtn = document.getElementById('clearSquadBtn');
+
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+          players = getSquadFromInputs();
+          // Ensure there are at least 1 player to unlock tracker
+          if (!players.length) {
+            alert('Please enter at least one player name before saving.');
+            showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
+            saveProfileMerged();
+            return;
+          }
+
+          // Keep gameweeks in sync
+          reconcileGameweeks();
+          renderGameweeks();
+
+          saveProfileMerged();
+          alert('Squad saved. Gameweek Tracker unlocked.');
+        });
+      }
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          players = [];
+          renderSquad();
+          showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
+          saveProfileMerged();
+        });
+      }
+    }
+
+    function wireGameweekButtons() {
+      const addBtn = document.getElementById('addGameweekBtn');
+      const resetBtn = document.getElementById('resetTrackerBtn');
+
+      if (addBtn) addBtn.addEventListener('click', () => addGameweek());
+      if (resetBtn) resetBtn.addEventListener('click', () => resetTracker());
+    }
+
+    // ===== Auto-restore + init =====
     window.addEventListener('DOMContentLoaded', async () => {
       const up = document.getElementById('uploadInput');
       if (up) {
@@ -1173,17 +1854,25 @@
         });
       }
 
+      wireSquadButtons();
+      wireGameweekButtons();
+
       const saved = loadProfile();
-      if (!saved || !saved.team) return;
+      if (!saved || !saved.team) {
+        // Locked states already visible
+        return;
+      }
 
       teamData = saved.team;
       lastFormations = saved.formations || null;
       selectedFormation = saved.selectedFormation || null;
       formationOverrides = saved.formationOverrides || {};
+      players = Array.isArray(saved.players) ? saved.players : [];
+      gameweeks = Array.isArray(saved.gameweeks) ? saved.gameweeks : [];
 
       applyTeamToUI(teamData);
-      showLinks();
 
+      // Formation
       unlockSection('formation');
       if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
         document.getElementById('formationLoader').classList.remove('visible');
@@ -1191,6 +1880,20 @@
       } else {
         await generateFormations();
       }
+
+      // Squad
+      unlockSection('squad');
+      renderSquad();
+
+      // Gameweeks
+      if (players.length) {
+        reconcileGameweeks();
+        renderGameweeks();
+      } else {
+        showLocked('gameweeks', 'Save your squad in Section 3 to unlock the Gameweek Tracker.');
+      }
+
+      saveProfileMerged();
     });
   </script>
 </body>
