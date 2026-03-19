@@ -454,19 +454,52 @@
     .yn-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(184,240,38,0.2); color: var(--white); border-radius: 8px; padding: 8px 10px; outline: none; }
     .yn-select:focus { border-color: var(--lime); background: rgba(184,240,38,0.06); }
 
-    .pom-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 0.8rem; }
+    
+ .num-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(184,240,38,0.2); color: var(--white); border-radius: 8px; padding: 8px 10px; outline: none; width: 90px; }
+ .num-input:focus { border-color: var(--lime); background: rgba(184,240,38,0.06); }
+ .gw-role-stack { display: flex; flex-direction: column; gap: 6px; }
+ .gw-meta { margin-top: 14px; border-top: 1px solid rgba(184,240,38,0.12); padding-top: 14px; }
+ .gw-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+ .gw-meta label { font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); font-family: 'Space Mono', monospace; display:block; margin-bottom: 6px; }
+ .gw-meta input[type="text"], .gw-meta input[type="date"], .gw-meta textarea, .gw-meta select { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(184,240,38,0.2); border-radius: 10px; color: var(--white); padding: 10px 12px; outline: none; transition: border-color 0.2s, background 0.2s; font-family: 'DM Sans', sans-serif; }
+ .gw-meta textarea { min-height: 90px; resize: vertical; }
+ .gw-meta input:focus, .gw-meta textarea:focus, .gw-meta select:focus { border-color: var(--lime); background: rgba(184,240,38,0.06); }
+ .score-row { display: grid; grid-template-columns: 1fr 90px 90px 170px; gap: 10px; align-items: end; }
+ .score-row .opponent { grid-column: 1 / 2; }
+ .score-row .for { grid-column: 2 / 3; }
+ .score-row .against { grid-column: 3 / 4; }
+ .score-row .date { grid-column: 4 / 5; }
+.gw-meta-actions { margin-top: 12px; display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+ @media (max-width: 900px) { .score-row { grid-template-columns: 1fr 90px 90px; } .score-row .opponent { grid-column: 1/-1; } .score-row .date { grid-column: 1/2; }
+}
+.pom-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 0.8rem; }
     .pom-wrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--lime); }
 
     /* reveal */
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.5s, transform 0.5s; }
-    .reveal.revealed { opacity: 1; transform: none; }
+    .reveal { opacity: 1; transform: none; transition: opacity 0.5s, transform 0.5s; }
+    .reveal.animate-reveal { opacity: 0; transform: translateY(30px); }
+    .reveal.animate-reveal.revealed { opacity: 1; transform: none; }
 
     @media (max-width: 600px) {
       header { padding: 0 18px; }
       .section-card { padding: 28px 20px; }
       main { padding: 40px 16px 80px; }
     }
-  </style>
+  
+/* Step 3: Season Summary Table */
+.season-wrap{margin-top:22px;padding-top:18px;border-top:1px solid rgba(184,240,38,0.12);} 
+.season-wrap h3{font-family:'Bebas Neue',cursive;font-size:1.6rem;letter-spacing:2px;color:var(--lime);margin-bottom:10px;}
+.season-table{width:100%;border-collapse:collapse;overflow:hidden;border:1px solid rgba(184,240,38,0.18);border-radius:12px;}
+.season-table th,.season-table td{padding:10px 12px;border-bottom:1px solid rgba(184,240,38,0.12);font-size:0.95rem;}
+.season-table th{color:var(--text-muted);font-family:'Space Mono',monospace;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;}
+.season-table td{font-family:'Space Mono',monospace;}
+.season-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:10px;}
+@media(max-width:700px){.season-kpi{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.kpi-card{background:rgba(255,255,255,0.03);border:1px solid rgba(184,240,38,0.18);border-radius:12px;padding:12px 14px;}
+.kpi-card .kpi-label{font-size:0.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);font-family:'Space Mono',monospace;}
+.kpi-card .kpi-val{font-size:1.4rem;font-family:'Bebas Neue',cursive;color:var(--lime);margin-top:6px;}
+
+</style>
 </head>
 <body>
   <header>
@@ -484,7 +517,7 @@
     <section class="hero">
       <div class="hero-eyebrow">Coaching Platform</div>
       <h1>COACH<br /><span>SMARTER</span></h1>
-      <p class="hero-desc">Set your team, pick a formation, enter your squad, then track match attendance and Player of the Match each gameweek — now with draggable formation snapshots per gameweek.</p>
+      <p class="hero-desc">Set your team, pick a formation, enter your squad, then track match attendance and Roles each gameweek — now with draggable formation snapshots per gameweek.</p>
       <div class="hero-pills">
         <span class="pill">⚡ Formation Builder</span>
         <span class="pill">👥 Squad Management</span>
@@ -613,6 +646,40 @@
           <button class="btn" id="saveSquadBtn">💾 Save Squad</button>
           <button class="btn btn-ghost" id="clearSquadBtn">🧹 Clear Names</button>
         </div>
+  <div class="season-wrap" id="seasonWrap">
+    <h3>Season Summary</h3>
+    <table class="season-table">
+      <thead>
+        <tr>
+          <th>Win</th>
+          <th>Draw</th>
+          <th>Loss</th>
+          <th>For</th>
+          <th>Against</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="seasonWin">0</td>
+          <td id="seasonDraw">0</td>
+          <td id="seasonLoss">0</td>
+          <td id="seasonFor">0</td>
+          <td id="seasonAgainst">0</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="season-kpi">
+      <div class="kpi-card"><div class="kpi-label">Games</div><div class="kpi-val" id="seasonGames">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">Points</div><div class="kpi-val" id="seasonPoints">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">Goal Diff</div><div class="kpi-val" id="seasonGD">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">GF / GA</div><div class="kpi-val" id="seasonGFGA">0 / 0</div></div>
+      <div class="kpi-card"><div class="kpi-label">W-D-L</div><div class="kpi-val" id="seasonWDL">0-0-0</div></div>
+    </div>
+  </div>
+  <div style="margin-top: 12px;">
+    <button class="btn btn-ghost" onclick="renderSeasonTable()">🔄 Update Table</button>
+  </div>
+
       </div>
     </section>
 
@@ -629,7 +696,7 @@
 
       <div class="section-content" id="gameweeksContent">
         <p style="color:var(--text-muted);margin:0 0 12px;font-size:0.9rem">
-          For each gameweek, mark Attendance (Y/N) and choose one <strong>Player of the Match</strong>. Drag the formation snapshot to reflect that gameweek's shape.
+          For each gameweek, mark Attendance (Y/N), enter <strong># Goals</strong>, assign <strong>Roles</strong> (POTM, Captain, Keeper), and capture the match result + notes. Drag the formation snapshot to reflect that gameweek's shape.
         </p>
 
         <div class="gameweek-controls">
@@ -644,10 +711,13 @@
 
   <script>
     // ===== Scroll reveal =====
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('animate-reveal'));
     const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); });
-    }, { threshold: 0.1 });
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); e.target.classList.remove('animate-reveal'); } });
+    }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    // Fallback: reveal all after 1.5s in case observer doesn't fire
+    setTimeout(() => { document.querySelectorAll('.reveal').forEach(el => { el.classList.add('revealed'); el.classList.remove('animate-reveal'); }); }, 1500);
 
     // ===== Gender toggle =====
     document.getElementById('gender').addEventListener('change', function() {
@@ -664,9 +734,8 @@
     let formationOverrides = {};
 
     let players = [];
-    let gameweeks = []; // { week, formation, positions:[{x,y}], attendance:{name:bool}, pom:string|null }
-
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    let gameweeks = []; // { week, formation, positions:[{x,y}], attendance:{name:bool}, goals:{name:int}, roles:{name:[roleStrings]}, result, scoreFor, scoreAgainst, matchDate, opponent, matchReport, success, improvements }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
     function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
@@ -770,7 +839,8 @@
 
         if (players.length) {
           reconcileGameweeks();
-          renderGameweeks();
+ renderGameweeks();
+ renderSeasonTable();
         } else {
           showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
         }
@@ -838,7 +908,8 @@
 
       document.getElementById('formationsGrid').innerHTML = '';
       document.getElementById('rosterGrid').innerHTML = '';
-      document.getElementById('gameweeksContainer').innerHTML = '';
+ document.getElementById('gameweeksContainer').innerHTML = '';
+ renderSeasonTable();
 
       const dl = document.getElementById('downloadBtn');
       if (dl) dl.disabled = true;
@@ -1216,6 +1287,36 @@
       return out;
     }
 
+    // ===== Season Summary Table (Step 3) =====
+    function renderSeasonTable() {
+      let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
+      const played = [];
+      (gameweeks || []).forEach(gw => {
+        if (!gw.result || gw.result === '') return;
+        played.push(gw);
+        if (gw.result === 'Win') wins++;
+        else if (gw.result === 'Draw') draws++;
+        else if (gw.result === 'Loss') losses++;
+        gf += (typeof gw.scoreFor === 'number' ? gw.scoreFor : 0);
+        ga += (typeof gw.scoreAgainst === 'number' ? gw.scoreAgainst : 0);
+      });
+      const games = played.length;
+      const points = wins * 3 + draws;
+      const gd = gf - ga;
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('seasonWin', wins);
+      set('seasonDraw', draws);
+      set('seasonLoss', losses);
+      set('seasonFor', gf);
+      set('seasonAgainst', ga);
+      set('seasonGames', games);
+      set('seasonPoints', points);
+      set('seasonGD', (gd >= 0 ? '+' : '') + gd);
+      set('seasonGFGA', `${gf} / ${ga}`);
+      set('seasonWDL', `${wins}-${draws}-${losses}`);
+    }
+
     // ===== Step 4 (Gameweeks) =====
     function snapshotPositionsForFormation(formationStr) {
       if (!formationStr) return [];
@@ -1231,7 +1332,11 @@
       const positions = snapshotPositionsForFormation(formation);
       const attendance = {};
       players.forEach(p => attendance[p] = false);
-      return { week: weekNum, formation, positions, attendance, pom: null };
+      const goals = {};
+ players.forEach(p => goals[p] = 0);
+ const roles = {};
+ players.forEach(p => roles[p] = []);
+ return { week: weekNum, formation, positions, attendance, goals, roles, result: '', scoreFor: 0, scoreAgainst: 0, matchDate: '', opponent: '', matchReport: '', success: '', improvements: '' };
     }
 
     function reconcileGameweeks() {
@@ -1243,18 +1348,53 @@
       if (!gameweeks.length) gameweeks = [createNewGameweek(1)];
 
       gameweeks.forEach(gw => {
-        if (!gw.attendance || typeof gw.attendance !== 'object') gw.attendance = {};
-        const next = {};
-        players.forEach(p => next[p] = !!gw.attendance[p]);
-        gw.attendance = next;
+ if (!gw.attendance || typeof gw.attendance !== 'object') gw.attendance = {};
+ const nextAtt = {};
+ players.forEach(p => nextAtt[p] = !!gw.attendance[p]);
+ gw.attendance = nextAtt;
 
-        if (gw.pom && !players.includes(gw.pom)) gw.pom = null;
+ // Goals
+ if (!gw.goals || typeof gw.goals !== 'object') gw.goals = {};
+ const nextGoals = {};
+ players.forEach(p => {
+   const v = gw.goals[p];
+   nextGoals[p] = (typeof v === 'number' && Number.isFinite(v) && v >= 0) ? Math.floor(v) : 0;
+ });
+ gw.goals = nextGoals;
 
-        if (!gw.formation) gw.formation = selectedFormation || null;
-        if (!gw.positions || !Array.isArray(gw.positions) || !gw.positions.length) {
-          gw.positions = snapshotPositionsForFormation(gw.formation);
-        }
-      });
+ // Roles (checkboxes, multiple values per player)
+ if (!gw.roles || typeof gw.roles !== 'object') gw.roles = {};
+ const nextRoles = {};
+ players.forEach(p => {
+   const arr = Array.isArray(gw.roles[p]) ? gw.roles[p] : [];
+   // Backward compatibility: old single POM field -> POTM
+   if (!arr.length && gw.pom && gw.pom === p) {
+     nextRoles[p] = ['POTM'];
+   } else {
+     const allowed = new Set(['POTM','Captain','Keeper']);
+     const clean = Array.from(new Set(arr.filter(x => allowed.has(x))));
+     nextRoles[p] = clean;
+   }
+ });
+ gw.roles = nextRoles;
+ if (gw.pom) delete gw.pom;
+
+ // Match meta
+ const allowedResults = new Set(['','Win','Loss','Draw']);
+ if (!allowedResults.has(gw.result)) gw.result = '';
+ gw.scoreFor = (typeof gw.scoreFor === 'number' && Number.isFinite(gw.scoreFor) && gw.scoreFor >= 0) ? Math.floor(gw.scoreFor) : 0;
+ gw.scoreAgainst = (typeof gw.scoreAgainst === 'number' && Number.isFinite(gw.scoreAgainst) && gw.scoreAgainst >= 0) ? Math.floor(gw.scoreAgainst) : 0;
+ gw.matchDate = (gw.matchDate || '');
+ gw.opponent = (gw.opponent || '');
+ gw.matchReport = (gw.matchReport || '');
+ gw.success = (gw.success || '');
+ gw.improvements = (gw.improvements || '');
+
+ if (!gw.formation) gw.formation = selectedFormation || null;
+ if (!gw.positions || !Array.isArray(gw.positions) || !gw.positions.length) {
+   gw.positions = snapshotPositionsForFormation(gw.formation);
+ }
+});
 
       saveProfileMerged();
       showContent('gameweeks');
@@ -1377,28 +1517,42 @@
         const formationHTML = renderMiniFormation(gw);
 
         const rows = players.map(p => {
-          const attended = gw.attendance && gw.attendance[p] ? 'Y' : 'N';
-          const pomChecked = gw.pom === p;
-          const pomDisabled = !(gw.attendance && gw.attendance[p]);
+   const attended = gw.attendance && gw.attendance[p] ? 'Y' : 'N';
+   const goalsVal = (gw.goals && typeof gw.goals[p] === 'number') ? gw.goals[p] : 0;
+   const rolesArr = (gw.roles && Array.isArray(gw.roles[p])) ? gw.roles[p] : [];
+   const disabled = !(gw.attendance && gw.attendance[p]);
 
-          return `
-            <tr>
-              <td>${escapeHtml(p)}</td>
-              <td>
-                <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
-                  <option value="N" ${attended === 'N' ? 'selected' : ''}>N</option>
-                  <option value="Y" ${attended === 'Y' ? 'selected' : ''}>Y</option>
-                </select>
-              </td>
-              <td>
-                <label class="pom-wrap">
-                  <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="pom" ${pomChecked ? 'checked' : ''} ${pomDisabled ? 'disabled' : ''} />
-                  POM
-                </label>
-              </td>
-            </tr>
-          `;
-        }).join('');
+   return `
+     <tr>
+       <td>${escapeHtml(p)}</td>
+       <td>
+         <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
+           <option value="N" ${attended === 'N' ? 'selected' : ''}>N</option>
+           <option value="Y" ${attended === 'Y' ? 'selected' : ''}>Y</option>
+         </select>
+       </td>
+       <td>
+         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goals" value="${goalsVal}" ${disabled ? 'disabled' : ''} />
+       </td>
+       <td>
+         <div class="gw-role-stack">
+           <label class="pom-wrap">
+             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="POTM" ${rolesArr.includes('POTM') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
+             POTM
+           </label>
+           <label class="pom-wrap">
+             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="Captain" ${rolesArr.includes('Captain') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
+             Captain
+           </label>
+           <label class="pom-wrap">
+             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="Keeper" ${rolesArr.includes('Keeper') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
+             Keeper
+           </label>
+         </div>
+       </td>
+     </tr>
+   `;
+ }).join('');
 
         return `
           <div class="gameweek" id="gw-${gw.week}">
@@ -1414,15 +1568,63 @@
                     <tr>
                       <th>Player name</th>
                       <th>Attendance (Y/N)</th>
-                      <th>Player of the match</th>
+                      <th># Goals scored</th>
+                      <th>Role</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${rows || `<tr><td colspan="3" style="color:var(--text-muted)">Add player names in Step 3 to begin tracking.</td></tr>`}
+                    ${rows || `<tr><td colspan="4" style="color:var(--text-muted)">Add player names in Step 3 to begin tracking.</td></tr>`}
                   </tbody>
                 </table>
               </div>
             </div>
+ <div class="gw-meta">
+   <div class="gw-meta-grid">
+     <div>
+       <label>Result</label>
+       <select data-week="${gw.week}" data-field="result">
+         <option value="" ${gw.result === '' ? 'selected' : ''}>Select...</option>
+         <option value="Win" ${gw.result === 'Win' ? 'selected' : ''}>Win</option>
+         <option value="Draw" ${gw.result === 'Draw' ? 'selected' : ''}>Draw</option>
+         <option value="Loss" ${gw.result === 'Loss' ? 'selected' : ''}>Loss</option>
+       </select>
+     </div>
+     <div class="score-row">
+       <div class="opponent">
+         <label>Opponent</label>
+         <input type="text" placeholder="e.g. Tigers" data-week="${gw.week}" data-field="opponent" value="${escapeHtml(gw.opponent || '')}" />
+       </div>
+       <div class="for">
+         <label>For</label>
+         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreFor" value="${gw.scoreFor ?? 0}" />
+       </div>
+       <div class="against">
+         <label>Against</label>
+         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreAgainst" value="${gw.scoreAgainst ?? 0}" />
+       </div>
+       <div class="date">
+         <label>Date</label>
+         <input type="date" data-week="${gw.week}" data-field="matchDate" value="${escapeHtml(gw.matchDate || '')}" />
+       </div>
+</div>
+     <div style="grid-column: 1/-1">
+       <label>Match report</label>
+       <textarea placeholder="Write a short match report..." data-week="${gw.week}" data-field="matchReport">${escapeHtml(gw.matchReport || '')}</textarea>
+     </div>
+     <div style="grid-column: 1/-1">
+       <label>Success</label>
+       <textarea placeholder="What went well?" data-week="${gw.week}" data-field="success">${escapeHtml(gw.success || '')}</textarea>
+     </div>
+     <div style="grid-column: 1/-1">
+       <label>Improvements</label>
+       <textarea placeholder="What will we improve next week?" data-week="${gw.week}" data-field="improvements">${escapeHtml(gw.improvements || '')}</textarea>
+     </div>
+   </div>
+   <div class="gw-meta-actions">
+     <button class="btn" type="button" data-week="${gw.week}" data-action="publishGameweek">📣 Publish gameweek</button>
+   </div>
+ </div>
+
           </div>
         `;
       }).join('');
@@ -1436,27 +1638,129 @@
           const gw = gameweeks.find(g => g.week === week);
           if (!gw) return;
           gw.attendance[player] = val;
-          if (!val && gw.pom === player) gw.pom = null;
+ if (!val) {
+   if (gw.goals) gw.goals[player] = 0;
+   if (gw.roles) gw.roles[player] = [];
+ }
           saveProfileMerged();
           renderGameweeks();
         });
       });
+ // Goals handlers
+ container.querySelectorAll('input[type="number"][data-field="goals"]').forEach(inp => {
+   inp.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const player = ev.target.getAttribute('data-player');
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     let v = parseInt(ev.target.value, 10);
+     if (Number.isNaN(v) || v < 0) v = 0;
+     gw.goals[player] = v;
+     saveProfileMerged();
+   });
+ });
 
-      // POM handlers
-      container.querySelectorAll('input[type="checkbox"][data-field="pom"]').forEach(chk => {
-        chk.addEventListener('change', (ev) => {
-          const week = parseInt(ev.target.getAttribute('data-week'), 10);
-          const player = ev.target.getAttribute('data-player');
-          const checked = ev.target.checked;
-          const gw = gameweeks.find(g => g.week === week);
-          if (!gw) return;
-          gw.pom = checked ? player : (gw.pom === player ? null : gw.pom);
-          saveProfileMerged();
-          renderGameweeks();
-        });
-      });
+ // Role handlers (checkboxes). Enforces unique POTM/Captain/Keeper per gameweek.
+ container.querySelectorAll('input[type="checkbox"][data-field="role"]').forEach(chk => {
+   chk.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const player = ev.target.getAttribute('data-player');
+     const role = ev.target.getAttribute('data-role');
+     const checked = ev.target.checked;
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     if (!gw.roles) gw.roles = {};
+     const allowed = new Set(['POTM','Captain','Keeper']);
+     if (!allowed.has(role)) return;
 
-      // ✅ NEW: draggable gameweek formations
+     const arr = Array.isArray(gw.roles[player]) ? gw.roles[player] : [];
+     let next = arr.slice();
+     if (checked) {
+       if (!next.includes(role)) next.push(role);
+       // enforce uniqueness: remove from all other players
+       players.forEach(p => {
+         if (p !== player) {
+           const other = Array.isArray(gw.roles[p]) ? gw.roles[p] : [];
+           if (other.includes(role)) gw.roles[p] = other.filter(r => r !== role);
+         }
+       });
+     } else {
+       next = next.filter(r => r !== role);
+     }
+     gw.roles[player] = next;
+     saveProfileMerged();
+     renderGameweeks();
+   });
+ });
+
+ // Match meta handlers
+ container.querySelectorAll('select[data-field="result"]').forEach(sel => {
+   sel.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     gw.result = ev.target.value;
+     saveProfileMerged();
+   });
+ });
+ container.querySelectorAll('input[data-field="opponent"]').forEach(inp => {
+   inp.addEventListener('input', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     gw.opponent = ev.target.value;
+     saveProfileMerged();
+   });
+ });
+ container.querySelectorAll('input[data-field="scoreFor"], input[data-field="scoreAgainst"]').forEach(inp => {
+   inp.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     let v = parseInt(ev.target.value, 10);
+     if (Number.isNaN(v) || v < 0) v = 0;
+     if (ev.target.getAttribute('data-field') === 'scoreFor') gw.scoreFor = v;
+     else gw.scoreAgainst = v;
+     saveProfileMerged();
+   });
+ });
+ container.querySelectorAll('input[type="date"][data-field="matchDate"]').forEach(inp => {
+   inp.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     gw.matchDate = ev.target.value;
+     saveProfileMerged();
+   });
+ });
+ container.querySelectorAll('textarea[data-field="matchReport"], textarea[data-field="success"], textarea[data-field="improvements"]').forEach(ta => {
+   ta.addEventListener('input', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const field = ev.target.getAttribute('data-field');
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     gw[field] = ev.target.value;
+     saveProfileMerged();
+   });
+ });
+
+ // Action buttons
+ container.querySelectorAll('button[data-action="publishGameweek"]').forEach(btn => {
+   btn.addEventListener('click', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     // Placeholder publish: copies summary to clipboard if available
+     const summary = `Gameweek ${week} — ${gw.matchDate || ''} vs ${gw.opponent || ''} — ${gw.result || ''} (${gw.scoreFor}-${gw.scoreAgainst})`;
+     if (navigator.clipboard && navigator.clipboard.writeText) {
+       navigator.clipboard.writeText(summary).then(() => alert('Gameweek summary copied to clipboard.')).catch(() => alert(summary));
+     } else {
+       alert(summary);
+     }
+   });
+ });
+
+ // ✅ NEW: draggable gameweek formations
       wireGameweekFormationDrag();
     }
 
@@ -1471,13 +1775,16 @@
           return;
         }
         reconcileGameweeks();
-        renderGameweeks();
-        saveProfileMerged();
+ renderGameweeks();
+ renderSeasonTable();
+ renderSeasonTable();
+ saveProfileMerged();
       });
 
       document.getElementById('clearSquadBtn').addEventListener('click', () => {
         players = [];
-        renderSquad();
+ renderSquad();
+ renderSeasonTable();
         showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
         saveProfileMerged();
       });
@@ -1525,7 +1832,8 @@
 
       if (players.length) {
         reconcileGameweeks();
-        renderGameweeks();
+ renderGameweeks();
+ renderSeasonTable();
       } else {
         showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
       }
