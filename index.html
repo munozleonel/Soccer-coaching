@@ -577,6 +577,20 @@
 .season-table tbody tr:last-child td{border-bottom:none;}
 .season-table th:last-child,.season-table td:last-child{color:var(--lime);font-weight:700;background:rgba(92,184,0,0.05);}
 
+/* Gameweek results list */
+.gw-results-wrap{margin-top:14px;}
+.gw-results-wrap .gwr-heading{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+.gw-result-row{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;margin-bottom:4px;background:#f8faf8;border:1px solid rgba(0,0,0,0.07);font-size:0.78rem;font-family:'Space Mono',monospace;}
+.gw-result-row .gwr-week{color:var(--lime);font-weight:700;min-width:32px;flex-shrink:0;}
+.gw-result-row .gwr-date{color:var(--text-muted);min-width:72px;flex-shrink:0;font-size:0.70rem;}
+.gw-result-row .gwr-opp{flex:1;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gw-result-row .gwr-score{color:var(--dark);min-width:36px;text-align:center;flex-shrink:0;}
+.gw-result-row .gwr-badge{font-size:0.65rem;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:100px;flex-shrink:0;}
+.gwr-badge.win{background:rgba(92,184,0,0.12);color:#3d7a00;border:1px solid rgba(92,184,0,0.25);}
+.gwr-badge.draw{background:rgba(255,165,0,0.12);color:#a06000;border:1px solid rgba(255,165,0,0.30);}
+.gwr-badge.loss{background:rgba(255,68,68,0.10);color:#c02020;border:1px solid rgba(255,68,68,0.25);}
+.gwr-badge.pending{background:rgba(0,0,0,0.05);color:var(--text-muted);border:1px solid rgba(0,0,0,0.10);}
+
 </style>
 </head>
 <body>
@@ -651,6 +665,9 @@
                   </tbody>
                 </table>
               </div>
+
+              <div class="gw-results-wrap" id="gwResultsWrap"></div>
+
               <div style="margin-top:10px;">
                 <button class="btn btn-ghost" onclick="renderSeasonTable()" style="font-size:0.78rem;padding:10px 16px;width:100%">🔄 Update Table</button>
               </div>
@@ -1385,7 +1402,6 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       });
       const games = played.length;
       const points = wins * 3 + draws;
-      const gd = gf - ga;
 
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       set('seasonGames', games);
@@ -1395,6 +1411,34 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       set('seasonFor', gf);
       set('seasonAgainst', ga);
       set('seasonPoints', points);
+
+      // ── Gameweek results list ──
+      const wrap = document.getElementById('gwResultsWrap');
+      if (!wrap) return;
+      if (!gameweeks || !gameweeks.length) { wrap.innerHTML = ''; return; }
+
+      const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      const rows = gameweeks.map(gw => {
+        const resultClass = gw.result === 'Win' ? 'win' : gw.result === 'Draw' ? 'draw' : gw.result === 'Loss' ? 'loss' : 'pending';
+        const resultLabel = gw.result || '—';
+        const score = (gw.result && gw.result !== '')
+          ? `${gw.scoreFor ?? 0}–${gw.scoreAgainst ?? 0}`
+          : '— ';
+        const dateStr = gw.matchDate
+          ? (() => { try { const d = new Date(gw.matchDate); return isNaN(d) ? gw.matchDate : d.toLocaleDateString('en-AU',{day:'2-digit',month:'short'}); } catch(e){ return gw.matchDate; } })()
+          : '—';
+        const opp = gw.opponent || '—';
+        return `<div class="gw-result-row">
+          <span class="gwr-week">GW${esc(gw.week)}</span>
+          <span class="gwr-date">${esc(dateStr)}</span>
+          <span class="gwr-opp">${esc(opp)}</span>
+          <span class="gwr-score">${esc(score)}</span>
+          <span class="gwr-badge ${resultClass}">${esc(resultLabel)}</span>
+        </div>`;
+      }).join('');
+
+      wrap.innerHTML = `<div class="gwr-heading">Results</div>${rows}`;
     }
 
     // ===== Step 4 (Gameweeks) =====
