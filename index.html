@@ -947,16 +947,77 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         const existing = loadProfile() || {};
         const current = buildProfileObject();
         const merged = { ...existing, ...current, savedAt: new Date().toISOString() };
-        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(merged));
+
+        // Save images separately per gameweek to avoid hitting localStorage quota.
+        // Strip images from the main profile object before saving it.
+        const gwWithoutImages = (merged.gameweeks || []).map(gw => {
+          const { images, ...rest } = gw;
+          return rest;
+        });
+        const profileToStore = { ...merged, gameweeks: gwWithoutImages };
+
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileToStore));
+
+        // Save each gameweek's images in its own key
+        (merged.gameweeks || []).forEach(gw => {
+          const imgKey = PROFILE_STORAGE_KEY + '_gw_images_' + gw.week;
+          if (Array.isArray(gw.images) && gw.images.length > 0) {
+            try {
+              localStorage.setItem(imgKey, JSON.stringify(gw.images));
+            } catch (imgErr) {
+              // If even per-GW images don't fit, remove the key so stale data isn't loaded
+              try { localStorage.removeItem(imgKey); } catch (_) {}
+              console.warn('Could not save images for GW' + gw.week + ' (storage full). Photos will not persist.', imgErr);
+            }
+          } else {
+            try { localStorage.removeItem(imgKey); } catch (_) {}
+          }
+        });
+
+        // Clean up image keys for gameweeks that no longer exist
+        const existingWeeks = new Set((merged.gameweeks || []).map(gw => gw.week));
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(PROFILE_STORAGE_KEY + '_gw_images_')) {
+            const weekNum = parseInt(k.replace(PROFILE_STORAGE_KEY + '_gw_images_', ''), 10);
+            if (!existingWeeks.has(weekNum)) {
+              try { localStorage.removeItem(k); } catch (_) {}
+            }
+          }
+        }
+
         const dl = document.getElementById('downloadBtn');
         if (dl) dl.disabled = false;
       } catch (e) {
         console.warn('Could not save profile:', e);
+        alert('⚠️ Could not save your data — storage is full.\n\nTip: Remove some match photos, or download your profile as a backup.');
       }
     }
 
+    function rehydrateImages(gwArray) {
+      // Attach persisted images back onto each gameweek object after loading
+      (gwArray || []).forEach(gw => {
+        const imgKey = PROFILE_STORAGE_KEY + '_gw_images_' + gw.week;
+        try {
+          const raw = localStorage.getItem(imgKey);
+          gw.images = raw ? JSON.parse(raw) : [];
+        } catch (_) {
+          gw.images = [];
+        }
+      });
+    }
+
     function clearProfile() {
-      try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch (e) {}
+      try {
+        // Remove per-gameweek image keys first
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(PROFILE_STORAGE_KEY + '_gw_images_')) keysToRemove.push(k);
+        }
+        keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+        localStorage.removeItem(PROFILE_STORAGE_KEY);
+      } catch (e) {}
     }
 
     function downloadProfile() {
@@ -968,6 +1029,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       teamData = profile.team;
       saveProfileMerged();
       const merged = loadProfile() || profile;
+
+      // Rehydrate images into the export so the downloaded JSON is complete
+      rehydrateImages(merged.gameweeks || []);
 
       const blob = new Blob([JSON.stringify(merged, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -997,6 +1061,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         formationOverrides = profile.formationOverrides || {};
         players = Array.isArray(profile.players) ? profile.players : [];
         gameweeks = Array.isArray(profile.gameweeks) ? profile.gameweeks : [];
+        rehydrateImages(gameweeks);
 
         applyTeamToUI(teamData);
 
@@ -2410,6 +2475,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       formationOverrides = saved.formationOverrides || {};
       players = Array.isArray(saved.players) ? saved.players : [];
       gameweeks = Array.isArray(saved.gameweeks) ? saved.gameweeks : [];
+      rehydrateImages(gameweeks);
 
       applyTeamToUI(teamData);
 
