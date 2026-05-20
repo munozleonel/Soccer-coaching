@@ -666,6 +666,21 @@
 .gwr-badge.loss{background:rgba(255,68,68,0.10);color:#c02020;border:1px solid rgba(255,68,68,0.25);}
 .gwr-badge.pending{background:rgba(0,0,0,0.05);color:var(--text-muted);border:1px solid rgba(0,0,0,0.10);}
 
+/* Player stats table */
+.player-stats-wrap{margin-top:18px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.08);}
+.player-stats-wrap h3{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--dark);margin-bottom:10px;}
+.player-stats-scroll{overflow-x:auto;}
+.player-stats-table{width:100%;border-collapse:collapse;border:1px solid rgba(0,0,0,0.10);border-radius:10px;overflow:hidden;}
+.player-stats-table th{padding:7px 5px;text-align:center;background:#f8faf8;color:var(--text-muted);font-family:'Space Mono',monospace;font-size:0.60rem;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,0.09);}
+.player-stats-table th:first-child{text-align:left;padding-left:8px;}
+.player-stats-table td{padding:7px 5px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.06);font-family:'Space Mono',monospace;color:var(--dark);font-size:0.72rem;}
+.player-stats-table td:first-child{text-align:left;padding-left:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.80rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.player-stats-table tbody tr:last-child td{border-bottom:none;}
+.player-stats-table tbody tr:hover td{background:rgba(92,184,0,0.04);}
+.pst-gd-pos{color:#3d7a00;font-weight:700;}
+.pst-gd-neg{color:#c02020;font-weight:700;}
+.pst-cs{color:var(--lime);font-weight:700;}
+
 </style>
 </head>
 <body>
@@ -742,6 +757,28 @@
               </div>
 
               <div class="gw-results-wrap" id="gwResultsWrap"></div>
+
+              <div class="player-stats-wrap" id="playerStatsWrap" style="display:none">
+                <h3>Player Stats</h3>
+                <div class="player-stats-scroll">
+                  <table class="player-stats-table">
+                    <thead>
+                      <tr>
+                        <th>Player</th>
+                        <th title="Gameweeks attended">GP</th>
+                        <th title="Halves as Attacker">Att</th>
+                        <th title="Halves as Defender or Keeper">Def/GK</th>
+                        <th title="Team goals scored while player was in Attack">GF</th>
+                        <th title="Team goals conceded while player was in Defense/Keeper">GA</th>
+                        <th title="Goal difference (GF − GA)">GD</th>
+                        <th title="Goals scored by this player">GS</th>
+                        <th title="Clean sheets while player was in Defense/Keeper">CS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="playerStatsTbody"></tbody>
+                  </table>
+                </div>
+              </div>
 
               <div style="margin-top:10px;">
                 <button class="btn btn-ghost" onclick="renderSeasonTable()" style="font-size:0.78rem;padding:10px 16px;width:100%">🔄 Update Table</button>
@@ -1579,6 +1616,106 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       }).join('');
 
       wrap.innerHTML = `<div class="gwr-heading">Results</div>${rows}`;
+
+      renderPlayerStatsTable();
+    }
+
+    function renderPlayerStatsTable() {
+      const wrap  = document.getElementById('playerStatsWrap');
+      const tbody = document.getElementById('playerStatsTbody');
+      if (!wrap || !tbody) return;
+
+      if (!players || !players.length) { wrap.style.display = 'none'; return; }
+
+      // Only count gameweeks with a recorded result
+      const playedGWs = (gameweeks || []).filter(gw => gw.result && gw.result !== '');
+      if (!playedGWs.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+
+      const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      const rows = players.map(p => {
+        let gamesPlayed = 0, attHalves = 0, defGkHalves = 0;
+        let teamGF = 0;   // team goals scored while player was in Attack
+        let teamGA = 0;   // team goals conceded while player was in Defense/Keeper
+        let playerGS = 0; // goals scored BY the player
+        let cleanSheets = 0; // clean sheets while player was in Defense/Keeper
+
+        playedGWs.forEach(gw => {
+          const attVal  = gw.attendance && gw.attendance[p] ? gw.attendance[p] : 'N';
+          const attended = attVal === 'Y' || attVal === 'Y (POTM)';
+          if (!attended) return;
+
+          gamesPlayed++;
+
+          // Scores
+          const finalFor     = typeof gw.scoreFor      === 'number' ? gw.scoreFor      : 0;
+          const finalAgainst = typeof gw.scoreAgainst  === 'number' ? gw.scoreAgainst  : 0;
+          const htFor        = typeof gw.htScoreFor    === 'number' ? gw.htScoreFor    : 0;
+          const htAgainst    = typeof gw.htScoreAgainst=== 'number' ? gw.htScoreAgainst: 0;
+          const h2For        = Math.max(0, finalFor     - htFor);
+          const h2Against    = Math.max(0, finalAgainst - htAgainst);
+
+          // Player goals this GW (GS)
+          const goalsObj = (gw.goals && gw.goals[p] && typeof gw.goals[p] === 'object')
+            ? gw.goals[p] : { h1: 0, h2: 0 };
+          playerGS += (goalsObj.h1 || 0) + (goalsObj.h2 || 0);
+
+          // Roles
+          const rolesObj = (gw.roles && gw.roles[p] && typeof gw.roles[p] === 'object' && !Array.isArray(gw.roles[p]))
+            ? gw.roles[p] : { h1: '', h2: '' };
+          const r1 = rolesObj.h1;
+          const r2 = rolesObj.h2;
+
+          const inAttH1   = r1 === 'Attack';
+          const inAttH2   = r2 === 'Attack';
+          const inDefH1   = r1 === 'Defense' || r1 === 'Keeper';
+          const inDefH2   = r2 === 'Defense' || r2 === 'Keeper';
+
+          // Count role halves
+          if (inAttH1) attHalves++;
+          if (inAttH2) attHalves++;
+          if (inDefH1) defGkHalves++;
+          if (inDefH2) defGkHalves++;
+
+          // GF: team goals scored while player was in Attack
+          if (inAttH1 && inAttH2) teamGF += finalFor;
+          else if (inAttH1)        teamGF += htFor;
+          else if (inAttH2)        teamGF += h2For;
+
+          // GA: team goals conceded while player was in Defense/Keeper
+          if (inDefH1 && inDefH2) teamGA += finalAgainst;
+          else if (inDefH1)        teamGA += htAgainst;
+          else if (inDefH2)        teamGA += h2Against;
+
+          // CS: clean sheet while player was in Defense/Keeper
+          // Both halves defending: clean sheet only if full match score against = 0
+          // H1 only defending: clean sheet if htAgainst = 0
+          // H2 only defending: clean sheet if h2Against = 0
+          if (inDefH1 && inDefH2 && finalAgainst === 0) cleanSheets++;
+          else if (inDefH1 && !inDefH2 && htAgainst  === 0) cleanSheets++;
+          else if (!inDefH1 && inDefH2 && h2Against  === 0) cleanSheets++;
+        });
+
+        const gd = teamGF - teamGA;
+        const gdClass = gd > 0 ? 'pst-gd-pos' : gd < 0 ? 'pst-gd-neg' : '';
+        const gdStr   = gd > 0 ? `+${gd}` : String(gd);
+
+        return `<tr>
+          <td title="${esc(p)}">${esc(p)}</td>
+          <td>${gamesPlayed}</td>
+          <td>${attHalves}</td>
+          <td>${defGkHalves}</td>
+          <td>${teamGF}</td>
+          <td>${teamGA}</td>
+          <td class="${gdClass}">${gdStr}</td>
+          <td>${playerGS}</td>
+          <td class="${cleanSheets > 0 ? 'pst-cs' : ''}">${cleanSheets}</td>
+        </tr>`;
+      }).join('');
+
+      tbody.innerHTML = rows ||
+        `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:12px">No data yet.</td></tr>`;
     }
 
     // ===== Step 4 (Gameweeks) =====
