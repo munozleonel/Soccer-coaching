@@ -598,11 +598,11 @@
  .gw-meta input[type="text"], .gw-meta input[type="date"], .gw-meta textarea, .gw-meta select { width: 100%; background: #f5f7f5; border: 1px solid rgba(0,0,0,0.14); border-radius: 10px; color: var(--dark); padding: 10px 12px; outline: none; transition: border-color 0.2s, background 0.2s; font-family: 'DM Sans', sans-serif; }
  .gw-meta textarea { min-height: 90px; resize: vertical; }
  .gw-meta input:focus, .gw-meta textarea:focus, .gw-meta select:focus { border-color: var(--lime); background: rgba(92,184,0,0.05); }
- .score-row { display: grid; grid-template-columns: 1fr 90px 90px 170px; gap: 10px; align-items: end; }
+ .score-row { display: grid; grid-template-columns: 1fr 90px 90px 90px 90px 170px; gap: 10px; align-items: end; }
  .score-row .opponent { grid-column: 1 / 2; }
- .score-row .for { grid-column: 2 / 3; }
- .score-row .against { grid-column: 3 / 4; }
- .score-row .date { grid-column: 4 / 5; }
+ .score-row .for { }
+ .score-row .against { }
+ .score-row .date { }
 .gw-meta-actions { margin-top: 12px; display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
 
 /* ── Gameweek image upload ── */
@@ -626,7 +626,7 @@
   display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s;
 }
 .gw-image-thumb:hover .gw-img-remove { opacity: 1; }
- @media (max-width: 900px) { .score-row { grid-template-columns: 1fr 90px 90px; } .score-row .opponent { grid-column: 1/-1; } .score-row .date { grid-column: 1/2; }
+ @media (max-width: 900px) { .score-row { grid-template-columns: 1fr 80px 80px 80px 80px; } .score-row .opponent { grid-column: 1/-1; } .score-row .date { grid-column: 1/-1; }
 }
 .pom-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 0.8rem; }
     .pom-wrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--lime); }
@@ -1595,12 +1595,12 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       const formation = selectedFormation || (lastFormations && lastFormations[0] && lastFormations[0].formation) || null;
       const positions = snapshotPositionsForFormation(formation);
       const attendance = {};
-      players.forEach(p => attendance[p] = false);
+      players.forEach(p => attendance[p] = 'N');
       const goals = {};
- players.forEach(p => goals[p] = 0);
- const roles = {};
- players.forEach(p => roles[p] = []);
- return { week: weekNum, formation, positions, dotLabels: [], attendance, goals, roles, result: '', scoreFor: 0, scoreAgainst: 0, matchDate: '', opponent: '', matchReport: '', success: '', improvements: '', images: [] };
+      players.forEach(p => goals[p] = { h1: 0, h2: 0 });
+      const roles = {};
+      players.forEach(p => roles[p] = { h1: '', h2: '' });
+      return { week: weekNum, formation, positions, dotLabels: [], attendance, goals, roles, result: '', scoreFor: 0, scoreAgainst: 0, htScoreFor: 0, htScoreAgainst: 0, matchDate: '', opponent: '', matchReport: '', success: '', improvements: '', images: [] };
     }
 
     function reconcileGameweeks() {
@@ -1614,30 +1614,45 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       gameweeks.forEach(gw => {
  if (!gw.attendance || typeof gw.attendance !== 'object') gw.attendance = {};
  const nextAtt = {};
- players.forEach(p => nextAtt[p] = !!gw.attendance[p]);
+ players.forEach(p => {
+   const v = gw.attendance[p];
+   // backward-compat: old boolean values
+   if (v === true)  nextAtt[p] = 'Y';
+   else if (v === false) nextAtt[p] = 'N';
+   else if (v === 'Y' || v === 'Y (POTM)') nextAtt[p] = v;
+   else nextAtt[p] = 'N';
+ });
  gw.attendance = nextAtt;
 
- // Goals
+ // Goals — new shape: { h1, h2 }; back-compat: plain number
  if (!gw.goals || typeof gw.goals !== 'object') gw.goals = {};
  const nextGoals = {};
  players.forEach(p => {
    const v = gw.goals[p];
-   nextGoals[p] = (typeof v === 'number' && Number.isFinite(v) && v >= 0) ? Math.floor(v) : 0;
+   if (v && typeof v === 'object' && !Array.isArray(v)) {
+     const h1 = (typeof v.h1 === 'number' && v.h1 >= 0) ? Math.floor(v.h1) : 0;
+     const h2 = (typeof v.h2 === 'number' && v.h2 >= 0) ? Math.floor(v.h2) : 0;
+     nextGoals[p] = { h1, h2 };
+   } else {
+     const legacy = (typeof v === 'number' && v >= 0) ? Math.floor(v) : 0;
+     nextGoals[p] = { h1: legacy, h2: 0 };
+   }
  });
  gw.goals = nextGoals;
 
- // Roles (checkboxes, multiple values per player)
+ // Roles — new shape: { h1: string, h2: string }; back-compat: array
+ const allowedRoles = new Set(['', 'Attack', 'Defense', 'Keeper']);
  if (!gw.roles || typeof gw.roles !== 'object') gw.roles = {};
  const nextRoles = {};
  players.forEach(p => {
-   const arr = Array.isArray(gw.roles[p]) ? gw.roles[p] : [];
-   // Backward compatibility: old single POM field -> POTM
-   if (!arr.length && gw.pom && gw.pom === p) {
-     nextRoles[p] = ['POTM'];
+   const v = gw.roles[p];
+   if (v && typeof v === 'object' && !Array.isArray(v)) {
+     nextRoles[p] = {
+       h1: allowedRoles.has(v.h1) ? v.h1 : '',
+       h2: allowedRoles.has(v.h2) ? v.h2 : ''
+     };
    } else {
-     const allowed = new Set(['POTM','Captain','Keeper']);
-     const clean = Array.from(new Set(arr.filter(x => allowed.has(x))));
-     nextRoles[p] = clean;
+     nextRoles[p] = { h1: '', h2: '' };
    }
  });
  gw.roles = nextRoles;
@@ -1648,6 +1663,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
  if (!allowedResults.has(gw.result)) gw.result = '';
  gw.scoreFor = (typeof gw.scoreFor === 'number' && Number.isFinite(gw.scoreFor) && gw.scoreFor >= 0) ? Math.floor(gw.scoreFor) : 0;
  gw.scoreAgainst = (typeof gw.scoreAgainst === 'number' && Number.isFinite(gw.scoreAgainst) && gw.scoreAgainst >= 0) ? Math.floor(gw.scoreAgainst) : 0;
+ gw.htScoreFor = (typeof gw.htScoreFor === 'number' && Number.isFinite(gw.htScoreFor) && gw.htScoreFor >= 0) ? Math.floor(gw.htScoreFor) : 0;
+ gw.htScoreAgainst = (typeof gw.htScoreAgainst === 'number' && Number.isFinite(gw.htScoreAgainst) && gw.htScoreAgainst >= 0) ? Math.floor(gw.htScoreAgainst) : 0;
  gw.matchDate = (gw.matchDate || '');
  gw.opponent = (gw.opponent || '');
  gw.matchReport = (gw.matchReport || '');
@@ -1804,37 +1821,61 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         const formationHTML = renderMiniFormation(gw);
 
         const rows = players.map(p => {
-   const attended = gw.attendance && gw.attendance[p] ? 'Y' : 'N';
-   const goalsVal = (gw.goals && typeof gw.goals[p] === 'number') ? gw.goals[p] : 0;
-   const rolesArr = (gw.roles && Array.isArray(gw.roles[p])) ? gw.roles[p] : [];
-   const disabled = !(gw.attendance && gw.attendance[p]);
+   const attVal  = (gw.attendance && gw.attendance[p]) ? gw.attendance[p] : 'N';
+   const attended = attVal === 'Y' || attVal === 'Y (POTM)';
+   const goalsObj = (gw.goals && gw.goals[p] && typeof gw.goals[p] === 'object') ? gw.goals[p] : { h1: 0, h2: 0 };
+   const h1 = goalsObj.h1 || 0;
+   const h2 = goalsObj.h2 || 0;
+   const rolesObj = (gw.roles && gw.roles[p] && typeof gw.roles[p] === 'object' && !Array.isArray(gw.roles[p])) ? gw.roles[p] : { h1: '', h2: '' };
+   const disabled = !attended;
+
+   const roleOpts = (cur) => ['', 'Attack', 'Defense', 'Keeper'].map(r =>
+     `<option value="${r}" ${cur === r ? 'selected' : ''}>${r || '—'}</option>`
+   ).join('');
 
    return `
      <tr>
        <td>${escapeHtml(p)}</td>
        <td>
          <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
-           <option value="N" ${attended === 'N' ? 'selected' : ''}>N</option>
-           <option value="Y" ${attended === 'Y' ? 'selected' : ''}>Y</option>
+           <option value="N"        ${attVal === 'N'        ? 'selected' : ''}>N</option>
+           <option value="Y"        ${attVal === 'Y'        ? 'selected' : ''}>Y</option>
+           <option value="Y (POTM)" ${attVal === 'Y (POTM)' ? 'selected' : ''}>Y (POTM)</option>
          </select>
        </td>
        <td>
-         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goals" value="${goalsVal}" ${disabled ? 'disabled' : ''} />
+         <div style="display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap">
+           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1</span>
+             <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric"
+               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH1" value="${h1}" ${disabled ? 'disabled' : ''} />
+           </div>
+           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2</span>
+             <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric"
+               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH2" value="${h2}" ${disabled ? 'disabled' : ''} />
+           </div>
+           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">Total</span>
+             <input class="num-input" style="width:52px;background:rgba(92,184,0,0.08);font-weight:700;color:var(--dark)" type="number" readonly
+               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsTotal" value="${h1 + h2}" />
+           </div>
+         </div>
        </td>
        <td>
-         <div class="gw-role-stack">
-           <label class="pom-wrap">
-             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="POTM" ${rolesArr.includes('POTM') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
-             POTM
-           </label>
-           <label class="pom-wrap">
-             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="Captain" ${rolesArr.includes('Captain') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
-             Captain
-           </label>
-           <label class="pom-wrap">
-             <input type="checkbox" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="role" data-role="Keeper" ${rolesArr.includes('Keeper') ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
-             Keeper
-           </label>
+         <div style="display:flex;gap:10px;flex-wrap:wrap">
+           <div style="display:flex;flex-direction:column;gap:3px">
+             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1 Role</span>
+             <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH1" ${disabled ? 'disabled' : ''}>
+               ${roleOpts(rolesObj.h1)}
+             </select>
+           </div>
+           <div style="display:flex;flex-direction:column;gap:3px">
+             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2 Role</span>
+             <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH2" ${disabled ? 'disabled' : ''}>
+               ${roleOpts(rolesObj.h2)}
+             </select>
+           </div>
          </div>
        </td>
      </tr>
@@ -1857,7 +1898,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
                   <thead>
                     <tr>
                       <th>Player name</th>
-                      <th>Attendance (Y/N)</th>
+                      <th>Attendance</th>
                       <th># Goals scored</th>
                       <th>Role</th>
                     </tr>
@@ -1885,12 +1926,20 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
          <input type="text" placeholder="e.g. Tigers" data-week="${gw.week}" data-field="opponent" value="${escapeHtml(gw.opponent || '')}" />
        </div>
        <div class="for">
-         <label>For</label>
+         <label>Final For</label>
          <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreFor" value="${gw.scoreFor ?? 0}" />
        </div>
        <div class="against">
-         <label>Against</label>
+         <label>Final Against</label>
          <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreAgainst" value="${gw.scoreAgainst ?? 0}" />
+       </div>
+       <div class="for">
+         <label>HT For</label>
+         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreFor" value="${gw.htScoreFor ?? 0}" />
+       </div>
+       <div class="against">
+         <label>HT Against</label>
+         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreAgainst" value="${gw.htScoreAgainst ?? 0}" />
        </div>
        <div class="date">
          <label>Date</label>
@@ -1943,64 +1992,55 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         sel.addEventListener('change', (ev) => {
           const week = parseInt(ev.target.getAttribute('data-week'), 10);
           const player = ev.target.getAttribute('data-player');
-          const val = ev.target.value === 'Y';
+          const val = ev.target.value; // 'Y', 'N', or 'Y (POTM)'
           const gw = gameweeks.find(g => g.week === week);
           if (!gw) return;
           gw.attendance[player] = val;
- if (!val) {
-   if (gw.goals) gw.goals[player] = 0;
-   if (gw.roles) gw.roles[player] = [];
- }
+          if (val === 'N') {
+            if (gw.goals) gw.goals[player] = { h1: 0, h2: 0 };
+            if (gw.roles) gw.roles[player] = { h1: '', h2: '' };
+          }
           saveProfileMerged();
           renderGameweeks();
         });
       });
- // Goals handlers
- container.querySelectorAll('input[type="number"][data-field="goals"]').forEach(inp => {
-   inp.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+ // Goals handlers — H1 and H2; Total is computed and updated live
+ container.querySelectorAll('input[data-field="goalsH1"], input[data-field="goalsH2"]').forEach(inp => {
+   inp.addEventListener('input', (ev) => {
+     const week   = parseInt(ev.target.getAttribute('data-week'), 10);
      const player = ev.target.getAttribute('data-player');
+     const half   = ev.target.getAttribute('data-field'); // 'goalsH1' | 'goalsH2'
      const gw = gameweeks.find(g => g.week === week);
      if (!gw) return;
+     if (!gw.goals[player] || typeof gw.goals[player] !== 'object') gw.goals[player] = { h1: 0, h2: 0 };
      let v = parseInt(ev.target.value, 10);
      if (Number.isNaN(v) || v < 0) v = 0;
-     gw.goals[player] = v;
+     if (half === 'goalsH1') gw.goals[player].h1 = v;
+     else                    gw.goals[player].h2 = v;
+     // Update Total field in the same row without full re-render
+     const row   = ev.target.closest('tr');
+     if (row) {
+       const totalInp = row.querySelector('input[data-field="goalsTotal"]');
+       if (totalInp) totalInp.value = gw.goals[player].h1 + gw.goals[player].h2;
+     }
      saveProfileMerged();
    });
  });
 
- // Role handlers (checkboxes). Enforces unique POTM/Captain/Keeper per gameweek.
- container.querySelectorAll('input[type="checkbox"][data-field="role"]').forEach(chk => {
-   chk.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+ // Role handlers — H1 Role and H2 Role dropdowns
+ container.querySelectorAll('select[data-field="roleH1"], select[data-field="roleH2"]').forEach(sel => {
+   sel.addEventListener('change', (ev) => {
+     const week   = parseInt(ev.target.getAttribute('data-week'), 10);
      const player = ev.target.getAttribute('data-player');
-     const role = ev.target.getAttribute('data-role');
-     const checked = ev.target.checked;
+     const half   = ev.target.getAttribute('data-field'); // 'roleH1' | 'roleH2'
      const gw = gameweeks.find(g => g.week === week);
      if (!gw) return;
-     if (!gw.roles) gw.roles = {};
-     const allowed = new Set(['POTM','Captain','Keeper']);
-     if (!allowed.has(role)) return;
-
-     const arr = Array.isArray(gw.roles[player]) ? gw.roles[player] : [];
-     let next = arr.slice();
-     if (checked) {
-       if (!next.includes(role)) next.push(role);
-       // enforce uniqueness for POTM and Captain only — Keeper allows multiple
-       if (role !== 'Keeper') {
-         players.forEach(p => {
-           if (p !== player) {
-             const other = Array.isArray(gw.roles[p]) ? gw.roles[p] : [];
-             if (other.includes(role)) gw.roles[p] = other.filter(r => r !== role);
-           }
-         });
-       }
-     } else {
-       next = next.filter(r => r !== role);
+     if (!gw.roles[player] || typeof gw.roles[player] !== 'object' || Array.isArray(gw.roles[player])) {
+       gw.roles[player] = { h1: '', h2: '' };
      }
-     gw.roles[player] = next;
+     if (half === 'roleH1') gw.roles[player].h1 = ev.target.value;
+     else                   gw.roles[player].h2 = ev.target.value;
      saveProfileMerged();
-     renderGameweeks();
    });
  });
 
@@ -2032,6 +2072,18 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
      if (Number.isNaN(v) || v < 0) v = 0;
      if (ev.target.getAttribute('data-field') === 'scoreFor') gw.scoreFor = v;
      else gw.scoreAgainst = v;
+     saveProfileMerged();
+   });
+ });
+ container.querySelectorAll('input[data-field="htScoreFor"], input[data-field="htScoreAgainst"]').forEach(inp => {
+   inp.addEventListener('change', (ev) => {
+     const week = parseInt(ev.target.getAttribute('data-week'), 10);
+     const gw = gameweeks.find(g => g.week === week);
+     if (!gw) return;
+     let v = parseInt(ev.target.value, 10);
+     if (Number.isNaN(v) || v < 0) v = 0;
+     if (ev.target.getAttribute('data-field') === 'htScoreFor') gw.htScoreFor = v;
+     else gw.htScoreAgainst = v;
      saveProfileMerged();
    });
  });
@@ -2276,21 +2328,22 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
       // Player rows
       const playerRows = players.map(p => {
-        const attended = gw.attendance && gw.attendance[p];
-        const goals = (gw.goals && typeof gw.goals[p] === 'number') ? gw.goals[p] : 0;
-        const roles = (gw.roles && Array.isArray(gw.roles[p])) ? gw.roles[p] : [];
-        const badges = roles.map(r => {
-          const colour = r === 'POTM' ? '#b8f026' : r === 'Captain' ? '#ffa500' : '#88ccff';
-          return `<span style="background:${colour}22;color:${colour};border:1px solid ${colour}55;padding:2px 8px;border-radius:100px;font-size:0.72rem;font-family:'Courier New',monospace;margin-right:4px">${esc(r)}</span>`;
-        }).join('');
+        const attVal   = gw.attendance && gw.attendance[p] ? gw.attendance[p] : 'N';
+        const attended = attVal === 'Y' || attVal === 'Y (POTM)';
+        const goalsObj = (gw.goals && gw.goals[p] && typeof gw.goals[p] === 'object') ? gw.goals[p] : { h1: 0, h2: 0 };
+        const totalGoals = (goalsObj.h1 || 0) + (goalsObj.h2 || 0);
+        const rolesObj = (gw.roles && gw.roles[p] && typeof gw.roles[p] === 'object' && !Array.isArray(gw.roles[p])) ? gw.roles[p] : { h1: '', h2: '' };
+        const roleColour = r => r === 'Attack' ? '#b8f026' : r === 'Defense' ? '#88ccff' : r === 'Keeper' ? '#ffa500' : '#aaa';
+        const roleBadge = (label, r) => r ? `<span style="background:${roleColour(r)}22;color:${roleColour(r)};border:1px solid ${roleColour(r)}55;padding:2px 8px;border-radius:100px;font-size:0.68rem;font-family:'Courier New',monospace;margin-right:3px">${esc(label)}: ${esc(r)}</span>` : '';
+        const attColour = attVal === 'Y (POTM)' ? '#ffd700' : attended ? '#b8f026' : '#ff6666';
         return `
           <tr style="border-bottom:1px solid rgba(184,240,38,0.1)">
             <td style="padding:10px 12px">${esc(p)}</td>
             <td style="padding:10px 12px;text-align:center">
-              <span style="color:${attended ? '#b8f026' : '#ff6666'};font-weight:700">${attended ? 'Y' : 'N'}</span>
+              <span style="color:${attColour};font-weight:700">${esc(attVal)}</span>
             </td>
-            <td style="padding:10px 12px;text-align:center">${attended ? goals : '—'}</td>
-            <td style="padding:10px 12px">${badges || '<span style="color:#556">—</span>'}</td>
+            <td style="padding:10px 12px;text-align:center">${attended ? `${goalsObj.h1||0}+${goalsObj.h2||0}=${totalGoals}` : '—'}</td>
+            <td style="padding:10px 12px">${attended ? (roleBadge('H1', rolesObj.h1) + roleBadge('H2', rolesObj.h2)) || '<span style="color:#556">—</span>' : '<span style="color:#556">—</span>'}</td>
           </tr>`;
       }).join('');
 
@@ -2360,7 +2413,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     <!-- Match meta strip -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:36px">
       ${gw.opponent ? `<div style="background:#fff;border:1px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 18px"><div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#5a7060;font-family:'Space Mono',monospace;margin-bottom:6px">Opponent</div><div style="font-size:1.1rem;font-weight:600;color:#0d1f15">${esc(gw.opponent)}</div></div>` : ''}
-      ${(gw.result) ? `<div style="background:#fff;border:1px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 18px"><div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#5a7060;font-family:'Space Mono',monospace;margin-bottom:6px">Score</div><div style="font-size:1.5rem;font-family:'Bebas Neue',cursive;letter-spacing:2px;color:#5cb800">${gw.scoreFor} — ${gw.scoreAgainst}</div></div>` : ''}
+      ${(gw.result) ? `<div style="background:#fff;border:1px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 18px"><div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#5a7060;font-family:'Space Mono',monospace;margin-bottom:6px">Final Score</div><div style="font-size:1.5rem;font-family:'Bebas Neue',cursive;letter-spacing:2px;color:#5cb800">${gw.scoreFor} — ${gw.scoreAgainst}</div></div>` : ''}
+      ${(gw.result) ? `<div style="background:#fff;border:1px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 18px"><div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#5a7060;font-family:'Space Mono',monospace;margin-bottom:6px">Half Time</div><div style="font-size:1.5rem;font-family:'Bebas Neue',cursive;letter-spacing:2px;color:#ffa500">${gw.htScoreFor ?? 0} — ${gw.htScoreAgainst ?? 0}</div></div>` : ''}
       ${gw.matchDate ? `<div style="background:#fff;border:1px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 18px"><div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#5a7060;font-family:'Space Mono',monospace;margin-bottom:6px">Date</div><div style="font-size:1.1rem;color:#0d1f15">${esc(gw.matchDate)}</div></div>` : ''}
     </div>
 
