@@ -514,14 +514,21 @@
     .roster-grid input { width: 100%; background: #f5f7f5; border: 1px solid rgba(0,0,0,0.14); border-radius: 10px; color: var(--dark); padding: 9px 12px; outline: none; transition: border-color 0.2s, background 0.2s; font-size: 0.9rem; }
     .roster-grid input:focus { border-color: var(--lime); background: rgba(92,184,0,0.05); }
 
-    /* Step 4 */
-    .gameweek-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-    .gameweek { border: 1px solid rgba(0,0,0,0.09); border-radius: 14px; background: #f8faf8; padding: 14px; margin-top: 14px; }
-    .gameweek-header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.09); margin-bottom: 12px; }
-    .gameweek-header h3 { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 2px; color: var(--dark); }
-
-    .gameweek-layout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; align-items: start; }
-    @media (max-width: 900px) { .gameweek-layout { grid-template-columns: 1fr; } }
+    /* Step 4 — flat gameweek sections */
+    .gw-control-bar { display:none; align-items:center; gap:8px; flex-wrap:wrap; background:#fff; border:1px solid rgba(0,0,0,0.09); border-radius:12px; padding:12px 16px; margin-bottom:24px; box-shadow:0 1px 6px rgba(0,0,0,0.05); }
+    .gw-control-bar.visible { display:flex; }
+    .gw-control-bar-divider { width:1px; height:20px; background:rgba(0,0,0,0.12); flex-shrink:0; }
+    .gw-pill { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:1px; padding:4px 12px; border-radius:100px; border:1px solid rgba(0,0,0,0.14); background:#f5f7f5; color:var(--text-muted); cursor:pointer; transition:background 0.13s,color 0.13s,border-color 0.13s; user-select:none; white-space:nowrap; }
+    .gw-pill.on { background:var(--lime); color:#0d1f15; border-color:var(--lime); font-weight:700; }
+    .gw-pill:hover:not(.on) { border-color:var(--lime); color:var(--dark); }
+    .gw-section { background:#fff; border:1px solid rgba(0,0,0,0.09); border-radius:16px; padding:36px 48px; margin-bottom:32px; box-shadow:0 2px 12px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
+    .gw-section::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:linear-gradient(90deg,var(--lime),transparent); }
+    .gw-section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid rgba(0,0,0,0.08); }
+    .gw-section-title { font-family:'Bebas Neue',cursive; font-size:2rem; letter-spacing:2px; color:var(--dark); display:flex; align-items:center; gap:12px; }
+    .gw-section-hint { font-family:'DM Sans',sans-serif; font-size:0.80rem; color:var(--text-muted); font-weight:400; letter-spacing:0; }
+    .gameweek-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .gameweek-layout { display:grid; grid-template-columns:260px 1fr; gap:14px; align-items:start; }
+    @media (max-width:900px) { .gameweek-layout { grid-template-columns:1fr; } .gw-section { padding:24px; } }
 
     .mini-field { border: 1px solid rgba(0,0,0,0.12); border-radius: 12px; overflow: hidden; background: rgba(26,74,46,0.65); }
     .mini-field .formation-title { font-size: 1.1rem; padding: 10px 12px; }
@@ -892,30 +899,17 @@
       </div>
     </section>
 
-    <!-- STEP 4 -->
-    <section class="section-card reveal" id="gameweeks">
-      <div class="section-num">04</div>
-      <div class="section-label">Step Four</div>
-      <h2>Gameweek Tracker</h2>
+    <!-- STEP 4 — control bar (always present, shown once squad saved) -->
+    <div class="gw-control-bar" id="gwControlBar">
+      <button class="btn" id="addGameweekBtn" style="padding:10px 18px;font-size:0.78rem">➕ Add Gameweek</button>
+      <button class="btn btn-ghost" id="resetTrackerBtn" style="padding:10px 18px;font-size:0.78rem">♻ Reset</button>
+      <div class="gw-control-bar-divider"></div>
+      <span style="font-family:'Space Mono',monospace;font-size:0.60rem;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase">Show:</span>
+      <div id="gwPillsRow" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
 
-      <div class="locked-msg visible" id="gameweeksLocked">
-        <div class="lock-icon">🔒</div>
-        <p>Save your squad in Step 3 to unlock the Gameweek Tracker.</p>
-      </div>
-
-      <div class="section-content" id="gameweeksContent">
-        <p style="color:var(--text-muted);margin:0 0 12px;font-size:0.9rem">
-          For each gameweek, mark Attendance (Y/N), enter <strong># Goals</strong>, assign <strong>Roles</strong> (POTM, Captain, Keeper), and capture the match result + notes. Drag the formation snapshot to reflect that gameweek's shape.
-        </p>
-
-        <div class="gameweek-controls">
-          <button class="btn" id="addGameweekBtn">➕ Add Gameweek</button>
-          <button class="btn btn-ghost" id="resetTrackerBtn">♻ Reset Tracker</button>
-        </div>
-
-        <div id="gameweeksContainer"></div>
-      </div>
-    </section>
+    <!-- Individual gameweek sections injected here by renderGameweeks() -->
+    <div id="gameweeksMount"></div>
 
       </div><!-- /.scroll-col -->
     </div><!-- /.page-layout -->
@@ -1119,7 +1113,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
  renderGameweeks();
  renderSeasonTable();
         } else {
-          showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+          renderGameweeks(); // shows/hides control bar based on players
         }
 
         saveProfileMerged();
@@ -1181,11 +1175,11 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
       showLocked('formation', 'Submit your team details in Step 1 to unlock formation recommendations.');
       showLocked('squad', 'Submit your team details in Step 1 to add your squad list.');
-      showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+      renderGameweeks(); // shows/hides control bar based on players
 
       document.getElementById('formationsGrid').innerHTML = '';
       document.getElementById('rosterGrid').innerHTML = '';
- document.getElementById('gameweeksContainer').innerHTML = '';
+ const gwMount = document.getElementById('gameweeksMount'); if (gwMount) gwMount.innerHTML = ''; const gwBar = document.getElementById('gwControlBar'); if (gwBar) gwBar.classList.remove('visible');
  renderSeasonTable();
 
       const dl = document.getElementById('downloadBtn');
@@ -1274,7 +1268,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       await generateFormations();
       renderSquad();
       showContent('squad');
-      showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+      renderGameweeks(); // shows/hides control bar based on players
     }
 
     // ===== Formation logic (Step 2) =====
@@ -1743,7 +1737,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     function reconcileGameweeks() {
       if (!Array.isArray(gameweeks)) gameweeks = [];
       if (!players || !players.length) {
-        showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+        renderGameweeks(); // shows/hides control bar based on players
         return;
       }
       if (!gameweeks.length) gameweeks = [createNewGameweek(1)];
@@ -1817,7 +1811,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 });
 
       saveProfileMerged();
-      showContent('gameweeks');
+      // gameweeks now rendered as flat sections — no showContent needed
     }
 
     function addGameweek() {
@@ -1943,193 +1937,208 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       });
     }
 
+    const hiddenWeeks = new Set(); // weeks hidden via pill toggle — persists across re-renders
+
+    function syncPillBar() {
+      const row = document.getElementById('gwPillsRow');
+      if (!row) return;
+      const weeks = (gameweeks || []).map(g => g.week);
+      // Remove pills for weeks that no longer exist
+      row.querySelectorAll('[data-vis-week]').forEach(p => {
+        if (!weeks.includes(parseInt(p.dataset.visWeek, 10))) p.remove();
+      });
+      // Add/update pills for each week
+      weeks.forEach(w => {
+        let pill = row.querySelector(`[data-vis-week="${w}"]`);
+        if (!pill) {
+          pill = document.createElement('button');
+          pill.className = 'gw-pill on';
+          pill.dataset.visWeek = w;
+          pill.addEventListener('click', () => {
+            const section = document.getElementById(`gw-${w}`);
+            if (!section) return;
+            if (hiddenWeeks.has(w)) {
+              hiddenWeeks.delete(w);
+              pill.classList.add('on');
+              section.style.display = '';
+            } else {
+              hiddenWeeks.add(w);
+              pill.classList.remove('on');
+              section.style.display = 'none';
+            }
+          });
+          row.appendChild(pill);
+        }
+        pill.textContent = `GW${w}`;
+        pill.classList.toggle('on', !hiddenWeeks.has(w));
+      });
+    }
+
     function renderGameweeks() {
+      const mount = document.getElementById('gameweeksMount');
+      const bar   = document.getElementById('gwControlBar');
+      if (!mount) return;
+
       if (!players || !players.length) {
-        showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+        mount.innerHTML = '';
+        if (bar) bar.classList.remove('visible');
         return;
       }
-      showContent('gameweeks');
 
-      const container = document.getElementById('gameweeksContainer');
-      if (!container) return;
+      if (bar) bar.classList.add('visible');
       if (!gameweeks || !gameweeks.length) reconcileGameweeks();
 
-      container.innerHTML = (gameweeks || []).map(gw => {
+      mount.innerHTML = (gameweeks || []).map(gw => {
         const formationHTML = renderMiniFormation(gw);
 
         const rows = players.map(p => {
-   const attVal  = (gw.attendance && gw.attendance[p]) ? gw.attendance[p] : 'N';
-   const attended = attVal === 'Y' || attVal === 'Y (POTM)';
-   const goalsObj = (gw.goals && gw.goals[p] && typeof gw.goals[p] === 'object') ? gw.goals[p] : { h1: 0, h2: 0 };
-   const h1 = goalsObj.h1 || 0;
-   const h2 = goalsObj.h2 || 0;
-   const rolesObj = (gw.roles && gw.roles[p] && typeof gw.roles[p] === 'object' && !Array.isArray(gw.roles[p])) ? gw.roles[p] : { h1: '', h2: '' };
-   const disabled = !attended;
+          const attVal   = (gw.attendance && gw.attendance[p]) ? gw.attendance[p] : 'N';
+          const attended = attVal === 'Y' || attVal === 'Y (POTM)';
+          const goalsObj = (gw.goals && gw.goals[p] && typeof gw.goals[p] === 'object') ? gw.goals[p] : { h1: 0, h2: 0 };
+          const h1 = goalsObj.h1 || 0;
+          const h2 = goalsObj.h2 || 0;
+          const rolesObj = (gw.roles && gw.roles[p] && typeof gw.roles[p] === 'object' && !Array.isArray(gw.roles[p])) ? gw.roles[p] : { h1: '', h2: '' };
+          const disabled = !attended;
+          const roleOpts = (cur) => ['', 'Attack', 'Defense', 'Keeper'].map(r =>
+            `<option value="${r}" ${cur === r ? 'selected' : ''}>${r || '\u2014'}</option>`
+          ).join('');
+          return `
+            <tr>
+              <td>${escapeHtml(p)}</td>
+              <td>
+                <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
+                  <option value="N" ${attVal === 'N' ? 'selected' : ''}>N</option>
+                  <option value="Y" ${attVal === 'Y' ? 'selected' : ''}>Y</option>
+                  <option value="Y (POTM)" ${attVal === 'Y (POTM)' ? 'selected' : ''}>Y (POTM)</option>
+                </select>
+              </td>
+              <td>
+                <div style="display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1</span>
+                    <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH1" value="${h1}" ${disabled ? 'disabled' : ''} />
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2</span>
+                    <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH2" value="${h2}" ${disabled ? 'disabled' : ''} />
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">Total</span>
+                    <input class="num-input" style="width:52px;background:rgba(92,184,0,0.08);font-weight:700;color:var(--dark)" type="number" readonly data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsTotal" value="${h1 + h2}" />
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1 Role</span>
+                    <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH1" ${disabled ? 'disabled' : ''}>${roleOpts(rolesObj.h1)}</select>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2 Role</span>
+                    <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH2" ${disabled ? 'disabled' : ''}>${roleOpts(rolesObj.h2)}</select>
+                  </div>
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
 
-   const roleOpts = (cur) => ['', 'Attack', 'Defense', 'Keeper'].map(r =>
-     `<option value="${r}" ${cur === r ? 'selected' : ''}>${r || '—'}</option>`
-   ).join('');
-
-   return `
-     <tr>
-       <td>${escapeHtml(p)}</td>
-       <td>
-         <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="attendance">
-           <option value="N"        ${attVal === 'N'        ? 'selected' : ''}>N</option>
-           <option value="Y"        ${attVal === 'Y'        ? 'selected' : ''}>Y</option>
-           <option value="Y (POTM)" ${attVal === 'Y (POTM)' ? 'selected' : ''}>Y (POTM)</option>
-         </select>
-       </td>
-       <td>
-         <div style="display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap">
-           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1</span>
-             <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric"
-               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH1" value="${h1}" ${disabled ? 'disabled' : ''} />
-           </div>
-           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2</span>
-             <input class="num-input" style="width:52px" type="number" min="0" step="1" inputmode="numeric"
-               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsH2" value="${h2}" ${disabled ? 'disabled' : ''} />
-           </div>
-           <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">Total</span>
-             <input class="num-input" style="width:52px;background:rgba(92,184,0,0.08);font-weight:700;color:var(--dark)" type="number" readonly
-               data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="goalsTotal" value="${h1 + h2}" />
-           </div>
-         </div>
-       </td>
-       <td>
-         <div style="display:flex;gap:10px;flex-wrap:wrap">
-           <div style="display:flex;flex-direction:column;gap:3px">
-             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H1 Role</span>
-             <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH1" ${disabled ? 'disabled' : ''}>
-               ${roleOpts(rolesObj.h1)}
-             </select>
-           </div>
-           <div style="display:flex;flex-direction:column;gap:3px">
-             <span style="font-size:0.6rem;font-family:'Space Mono',monospace;color:var(--text-muted);letter-spacing:1px">H2 Role</span>
-             <select class="yn-select" data-week="${gw.week}" data-player="${escapeHtml(p)}" data-field="roleH2" ${disabled ? 'disabled' : ''}>
-               ${roleOpts(rolesObj.h2)}
-             </select>
-           </div>
-         </div>
-       </td>
-     </tr>
-   `;
- }).join('');
-
+        const hidden = hiddenWeeks.has(gw.week);
         return `
-          <div class="gameweek" id="gw-${gw.week}">
-            <div class="gameweek-header">
-              <h3>${gw.publishedFile
-                ? `<a href="${escapeHtml(gw.publishedFile)}" target="_blank" style="color:var(--lime);text-decoration:none;border-bottom:2px solid rgba(184,240,38,0.4);padding-bottom:2px;" title="Open published report">Gameweek ${gw.week} ↗</a>`
-                : `Gameweek ${gw.week}`
-              }</h3>
-              <span style="color: var(--text-muted)">Drag positions · click formation to rename · click dot to edit label</span>
+          <section class="gw-section" id="gw-${gw.week}" style="${hidden ? 'display:none' : ''}">
+            <div class="gw-section-header">
+              <div class="gw-section-title">
+                ${gw.publishedFile
+                  ? `<a href="${escapeHtml(gw.publishedFile)}" target="_blank" style="color:inherit;text-decoration:none;border-bottom:2px solid rgba(92,184,0,0.4)" title="Open published report">Gameweek ${gw.week} \u2197</a>`
+                  : `Gameweek ${gw.week}`}
+                <span class="gw-section-hint">Drag positions \u00b7 click formation to rename \u00b7 click dot to edit label</span>
+              </div>
             </div>
             <div class="gameweek-layout">
               ${formationHTML}
               <div>
                 <table>
-                  <thead>
-                    <tr>
-                      <th>Player name</th>
-                      <th>Attendance</th>
-                      <th># Goals scored</th>
-                      <th>Role</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${rows || `<tr><td colspan="4" style="color:var(--text-muted)">Add player names in Step 3 to begin tracking.</td></tr>`}
-                  </tbody>
+                  <thead><tr>
+                    <th>Player name</th><th>Attendance</th><th># Goals scored</th><th>Role</th>
+                  </tr></thead>
+                  <tbody>${rows || `<tr><td colspan="4" style="color:var(--text-muted)">Add players in Step 3.</td></tr>`}</tbody>
                 </table>
               </div>
             </div>
- <div class="gw-meta">
-   <div class="gw-meta-grid">
-     <div>
-       <label>Result</label>
-       <select data-week="${gw.week}" data-field="result">
-         <option value="" ${gw.result === '' ? 'selected' : ''}>Select...</option>
-         <option value="Win" ${gw.result === 'Win' ? 'selected' : ''}>Win</option>
-         <option value="Draw" ${gw.result === 'Draw' ? 'selected' : ''}>Draw</option>
-         <option value="Loss" ${gw.result === 'Loss' ? 'selected' : ''}>Loss</option>
-       </select>
-     </div>
-     <div class="score-row">
-       <div class="opponent">
-         <label>Opponent</label>
-         <input type="text" placeholder="e.g. Tigers" data-week="${gw.week}" data-field="opponent" value="${escapeHtml(gw.opponent || '')}" />
-       </div>
-       <div class="for">
-         <label>Final For</label>
-         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreFor" value="${gw.scoreFor ?? 0}" />
-       </div>
-       <div class="against">
-         <label>Final Against</label>
-         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreAgainst" value="${gw.scoreAgainst ?? 0}" />
-       </div>
-       <div class="for">
-         <label>HT For</label>
-         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreFor" value="${gw.htScoreFor ?? 0}" />
-       </div>
-       <div class="against">
-         <label>HT Against</label>
-         <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreAgainst" value="${gw.htScoreAgainst ?? 0}" />
-       </div>
-       <div class="date">
-         <label>Date</label>
-         <input type="date" data-week="${gw.week}" data-field="matchDate" value="${escapeHtml(gw.matchDate || '')}" />
-       </div>
-</div>
-     <div style="grid-column: 1/-1">
-       <label>Match report</label>
-       <textarea placeholder="Write a short match report..." data-week="${gw.week}" data-field="matchReport">${escapeHtml(gw.matchReport || '')}</textarea>
-     </div>
-     <div style="grid-column: 1/-1">
-       <label>Success</label>
-       <textarea placeholder="What went well?" data-week="${gw.week}" data-field="success">${escapeHtml(gw.success || '')}</textarea>
-     </div>
-     <div style="grid-column: 1/-1">
-       <label>Improvements</label>
-       <textarea placeholder="What will we improve next week?" data-week="${gw.week}" data-field="improvements">${escapeHtml(gw.improvements || '')}</textarea>
-     </div>
-   </div>
-   <div class="gw-meta-actions">
-     <button class="btn" type="button" data-week="${gw.week}" data-action="publishGameweek">📣 Publish gameweek</button>
-   </div>
-   <!-- ── Image uploads ── -->
-   <div class="gw-images-section">
-     <span class="gw-images-label">📷 Match Photos</span>
-     ${(gw.images && gw.images.length > 0) ? `
-     <div class="gw-image-grid" id="gw-img-grid-${gw.week}">
-       ${gw.images.map((src, i) => `
-         <div class="gw-image-thumb">
-           <img src="${src}" alt="Match photo ${i+1}" />
-           <button class="gw-img-remove" data-week="${gw.week}" data-img-idx="${i}" title="Remove photo">✕</button>
-         </div>`).join('')}
-     </div>` : ''}
-     <div class="gw-image-dropzone" style="margin-top:${(gw.images && gw.images.length > 0) ? '10px' : '0'}">
-       <input type="file" accept="image/*" multiple data-week="${gw.week}" data-action="uploadImages" />
-       <div class="gw-image-dropzone-text">
-         📁 Drop photos here or <span>click to browse</span><br/>
-         <span style="color:var(--text-muted);font-size:0.65rem">JPG, PNG, WEBP — up to 10 per gameweek</span>
-       </div>
-     </div>
-   </div>
- </div>
-
-          </div>
-        `;
+            <div class="gw-meta">
+              <div class="gw-meta-grid">
+                <div>
+                  <label>Result</label>
+                  <select data-week="${gw.week}" data-field="result">
+                    <option value="" ${gw.result === '' ? 'selected' : ''}>Select...</option>
+                    <option value="Win"  ${gw.result === 'Win'  ? 'selected' : ''}>Win</option>
+                    <option value="Draw" ${gw.result === 'Draw' ? 'selected' : ''}>Draw</option>
+                    <option value="Loss" ${gw.result === 'Loss' ? 'selected' : ''}>Loss</option>
+                  </select>
+                </div>
+                <div class="score-row">
+                  <div class="opponent"><label>Opponent</label>
+                    <input type="text" placeholder="e.g. Tigers" data-week="${gw.week}" data-field="opponent" value="${escapeHtml(gw.opponent || '')}" />
+                  </div>
+                  <div class="for"><label>Final For</label>
+                    <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreFor" value="${gw.scoreFor ?? 0}" />
+                  </div>
+                  <div class="against"><label>Final Against</label>
+                    <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="scoreAgainst" value="${gw.scoreAgainst ?? 0}" />
+                  </div>
+                  <div class="for"><label>HT For</label>
+                    <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreFor" value="${gw.htScoreFor ?? 0}" />
+                  </div>
+                  <div class="against"><label>HT Against</label>
+                    <input class="num-input" type="number" min="0" step="1" inputmode="numeric" data-week="${gw.week}" data-field="htScoreAgainst" value="${gw.htScoreAgainst ?? 0}" />
+                  </div>
+                  <div class="date"><label>Date</label>
+                    <input type="date" data-week="${gw.week}" data-field="matchDate" value="${escapeHtml(gw.matchDate || '')}" />
+                  </div>
+                </div>
+                <div style="grid-column:1/-1"><label>Match report</label>
+                  <textarea placeholder="Write a short match report..." data-week="${gw.week}" data-field="matchReport">${escapeHtml(gw.matchReport || '')}</textarea>
+                </div>
+                <div style="grid-column:1/-1"><label>Success</label>
+                  <textarea placeholder="What went well?" data-week="${gw.week}" data-field="success">${escapeHtml(gw.success || '')}</textarea>
+                </div>
+                <div style="grid-column:1/-1"><label>Improvements</label>
+                  <textarea placeholder="What will we improve next week?" data-week="${gw.week}" data-field="improvements">${escapeHtml(gw.improvements || '')}</textarea>
+                </div>
+              </div>
+              <div class="gw-meta-actions">
+                <button class="btn" type="button" data-week="${gw.week}" data-action="publishGameweek">\ud83d\udce3 Publish gameweek</button>
+              </div>
+              <div class="gw-images-section">
+                <span class="gw-images-label">\ud83d\udcf7 Match Photos</span>
+                ${(gw.images && gw.images.length > 0) ? `
+                <div class="gw-image-grid" id="gw-img-grid-${gw.week}">
+                  ${gw.images.map((src, i) => `
+                    <div class="gw-image-thumb">
+                      <img src="${src}" alt="Match photo ${i+1}" />
+                      <button class="gw-img-remove" data-week="${gw.week}" data-img-idx="${i}" title="Remove photo">\u2715</button>
+                    </div>`).join('')}
+                </div>` : ''}
+                <div class="gw-image-dropzone" style="margin-top:${(gw.images && gw.images.length > 0) ? '10px' : '0'}">
+                  <input type="file" accept="image/*" multiple data-week="${gw.week}" data-action="uploadImages" />
+                  <div class="gw-image-dropzone-text">
+                    \ud83d\udcc1 Drop photos here or <span>click to browse</span><br/>
+                    <span style="color:var(--text-muted);font-size:0.65rem">JPG, PNG, WEBP \u2014 up to 10 per gameweek</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>`;
       }).join('');
 
-      // Attendance handlers
-      container.querySelectorAll('select[data-field="attendance"]').forEach(sel => {
+      syncPillBar();
+
+      // Wire all handlers onto mount
+      mount.querySelectorAll('select[data-field="attendance"]').forEach(sel => {
         sel.addEventListener('change', (ev) => {
           const week = parseInt(ev.target.getAttribute('data-week'), 10);
           const player = ev.target.getAttribute('data-player');
-          const val = ev.target.value; // 'Y', 'N', or 'Y (POTM)'
+          const val = ev.target.value;
           const gw = gameweeks.find(g => g.week === week);
           if (!gw) return;
           gw.attendance[player] = val;
@@ -2141,141 +2150,85 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
           renderGameweeks();
         });
       });
- // Goals handlers — H1 and H2; Total is computed and updated live
- container.querySelectorAll('input[data-field="goalsH1"], input[data-field="goalsH2"]').forEach(inp => {
-   inp.addEventListener('input', (ev) => {
-     const week   = parseInt(ev.target.getAttribute('data-week'), 10);
-     const player = ev.target.getAttribute('data-player');
-     const half   = ev.target.getAttribute('data-field'); // 'goalsH1' | 'goalsH2'
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     if (!gw.goals[player] || typeof gw.goals[player] !== 'object') gw.goals[player] = { h1: 0, h2: 0 };
-     let v = parseInt(ev.target.value, 10);
-     if (Number.isNaN(v) || v < 0) v = 0;
-     if (half === 'goalsH1') gw.goals[player].h1 = v;
-     else                    gw.goals[player].h2 = v;
-     // Update Total field in the same row without full re-render
-     const row   = ev.target.closest('tr');
-     if (row) {
-       const totalInp = row.querySelector('input[data-field="goalsTotal"]');
-       if (totalInp) totalInp.value = gw.goals[player].h1 + gw.goals[player].h2;
-     }
-     saveProfileMerged();
-   });
- });
-
- // Role handlers — H1 Role and H2 Role dropdowns
- container.querySelectorAll('select[data-field="roleH1"], select[data-field="roleH2"]').forEach(sel => {
-   sel.addEventListener('change', (ev) => {
-     const week   = parseInt(ev.target.getAttribute('data-week'), 10);
-     const player = ev.target.getAttribute('data-player');
-     const half   = ev.target.getAttribute('data-field'); // 'roleH1' | 'roleH2'
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     if (!gw.roles[player] || typeof gw.roles[player] !== 'object' || Array.isArray(gw.roles[player])) {
-       gw.roles[player] = { h1: '', h2: '' };
-     }
-     if (half === 'roleH1') gw.roles[player].h1 = ev.target.value;
-     else                   gw.roles[player].h2 = ev.target.value;
-     saveProfileMerged();
-   });
- });
-
- // Match meta handlers
- container.querySelectorAll('select[data-field="result"]').forEach(sel => {
-   sel.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     gw.result = ev.target.value;
-     saveProfileMerged();
-   });
- });
- container.querySelectorAll('input[data-field="opponent"]').forEach(inp => {
-   inp.addEventListener('input', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     gw.opponent = ev.target.value;
-     saveProfileMerged();
-   });
- });
- container.querySelectorAll('input[data-field="scoreFor"], input[data-field="scoreAgainst"]').forEach(inp => {
-   inp.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     let v = parseInt(ev.target.value, 10);
-     if (Number.isNaN(v) || v < 0) v = 0;
-     if (ev.target.getAttribute('data-field') === 'scoreFor') gw.scoreFor = v;
-     else gw.scoreAgainst = v;
-     saveProfileMerged();
-   });
- });
- container.querySelectorAll('input[data-field="htScoreFor"], input[data-field="htScoreAgainst"]').forEach(inp => {
-   inp.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     let v = parseInt(ev.target.value, 10);
-     if (Number.isNaN(v) || v < 0) v = 0;
-     if (ev.target.getAttribute('data-field') === 'htScoreFor') gw.htScoreFor = v;
-     else gw.htScoreAgainst = v;
-     saveProfileMerged();
-   });
- });
- container.querySelectorAll('input[type="date"][data-field="matchDate"]').forEach(inp => {
-   inp.addEventListener('change', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     gw.matchDate = ev.target.value;
-     saveProfileMerged();
-   });
- });
- container.querySelectorAll('textarea[data-field="matchReport"], textarea[data-field="success"], textarea[data-field="improvements"]').forEach(ta => {
-   ta.addEventListener('input', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const field = ev.target.getAttribute('data-field');
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     gw[field] = ev.target.value;
-     saveProfileMerged();
-   });
- });
-
- // Action buttons
- container.querySelectorAll('button[data-action="publishGameweek"]').forEach(btn => {
-   btn.addEventListener('click', (ev) => {
-     const week = parseInt(ev.target.getAttribute('data-week'), 10);
-     const gw = gameweeks.find(g => g.week === week);
-     if (!gw) return;
-     const filename = `gameweek${week}.html`;
-     const html = buildGameweekHTML(gw);
-     const blob = new Blob([html], { type: 'text/html' });
-     const url = URL.createObjectURL(blob);
-     const a = document.createElement('a');
-     a.href = url;
-     a.download = filename;
-     document.body.appendChild(a);
-     a.click();
-     a.remove();
-     URL.revokeObjectURL(url);
-     // Store the published filename on the gameweek and re-render so the header becomes a link
-     gw.publishedFile = filename;
-     saveProfileMerged();
-     renderGameweeks();
-     renderSeasonTable();
-   });
- });
-
- // ✅ NEW: draggable gameweek formations
-      wireGameweekFormationDrag();
-      wireFormationTitleEditing();
-      wireDotLabelEditing();
-
-      // ── Image upload handlers ──
-      container.querySelectorAll('input[data-action="uploadImages"]').forEach(inp => {
+      mount.querySelectorAll('input[data-field="goalsH1"], input[data-field="goalsH2"]').forEach(inp => {
+        inp.addEventListener('input', (ev) => {
+          const week = parseInt(ev.target.getAttribute('data-week'), 10);
+          const player = ev.target.getAttribute('data-player');
+          const half = ev.target.getAttribute('data-field');
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw) return;
+          if (!gw.goals[player] || typeof gw.goals[player] !== 'object') gw.goals[player] = { h1: 0, h2: 0 };
+          let v = parseInt(ev.target.value, 10);
+          if (Number.isNaN(v) || v < 0) v = 0;
+          if (half === 'goalsH1') gw.goals[player].h1 = v;
+          else gw.goals[player].h2 = v;
+          const row = ev.target.closest('tr');
+          if (row) { const t = row.querySelector('input[data-field="goalsTotal"]'); if (t) t.value = gw.goals[player].h1 + gw.goals[player].h2; }
+          saveProfileMerged();
+        });
+      });
+      mount.querySelectorAll('select[data-field="roleH1"], select[data-field="roleH2"]').forEach(sel => {
+        sel.addEventListener('change', (ev) => {
+          const week = parseInt(ev.target.getAttribute('data-week'), 10);
+          const player = ev.target.getAttribute('data-player');
+          const half = ev.target.getAttribute('data-field');
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw) return;
+          if (!gw.roles[player] || typeof gw.roles[player] !== 'object' || Array.isArray(gw.roles[player])) gw.roles[player] = { h1: '', h2: '' };
+          if (half === 'roleH1') gw.roles[player].h1 = ev.target.value;
+          else gw.roles[player].h2 = ev.target.value;
+          saveProfileMerged();
+        });
+      });
+      mount.querySelectorAll('select[data-field="result"]').forEach(sel => {
+        sel.addEventListener('change', (ev) => { const gw = gameweeks.find(g => g.week === parseInt(ev.target.getAttribute('data-week'),10)); if (gw) { gw.result = ev.target.value; saveProfileMerged(); } });
+      });
+      mount.querySelectorAll('input[data-field="opponent"]').forEach(inp => {
+        inp.addEventListener('input', (ev) => { const gw = gameweeks.find(g => g.week === parseInt(ev.target.getAttribute('data-week'),10)); if (gw) { gw.opponent = ev.target.value; saveProfileMerged(); } });
+      });
+      mount.querySelectorAll('input[data-field="scoreFor"],input[data-field="scoreAgainst"],input[data-field="htScoreFor"],input[data-field="htScoreAgainst"]').forEach(inp => {
+        inp.addEventListener('change', (ev) => {
+          const gw = gameweeks.find(g => g.week === parseInt(ev.target.getAttribute('data-week'),10));
+          if (!gw) return;
+          let v = parseInt(ev.target.value, 10); if (Number.isNaN(v) || v < 0) v = 0;
+          gw[ev.target.getAttribute('data-field')] = v;
+          saveProfileMerged();
+        });
+      });
+      mount.querySelectorAll('input[type="date"][data-field="matchDate"]').forEach(inp => {
+        inp.addEventListener('change', (ev) => { const gw = gameweeks.find(g => g.week === parseInt(ev.target.getAttribute('data-week'),10)); if (gw) { gw.matchDate = ev.target.value; saveProfileMerged(); } });
+      });
+      mount.querySelectorAll('textarea[data-field="matchReport"],textarea[data-field="success"],textarea[data-field="improvements"]').forEach(ta => {
+        ta.addEventListener('input', (ev) => { const gw = gameweeks.find(g => g.week === parseInt(ev.target.getAttribute('data-week'),10)); if (gw) { gw[ev.target.getAttribute('data-field')] = ev.target.value; saveProfileMerged(); } });
+      });
+      mount.querySelectorAll('button[data-action="publishGameweek"]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const week = parseInt(ev.target.getAttribute('data-week'), 10);
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw) return;
+          const filename = `gameweek${week}.html`;
+          const html = buildGameweekHTML(gw);
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+          gw.publishedFile = filename;
+          saveProfileMerged(); renderGameweeks(); renderSeasonTable();
+        });
+      });
+      mount.querySelectorAll('button.gw-img-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const week = parseInt(btn.getAttribute('data-week'), 10);
+          const idx  = parseInt(btn.getAttribute('data-img-idx'), 10);
+          const gw = gameweeks.find(g => g.week === week);
+          if (!gw || !Array.isArray(gw.images)) return;
+          gw.images.splice(idx, 1);
+          saveProfileMerged(); renderGameweeks();
+        });
+      });
+      mount.querySelectorAll('input[data-action="uploadImages"]').forEach(inp => {
         const zone = inp.parentElement;
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
         zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
@@ -2283,17 +2236,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         inp.addEventListener('change', (ev) => { handleImageFiles(inp, ev.target.files); ev.target.value = ''; });
       });
 
-      container.querySelectorAll('button.gw-img-remove').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const week = parseInt(btn.getAttribute('data-week'), 10);
-          const idx  = parseInt(btn.getAttribute('data-img-idx'), 10);
-          const gw   = gameweeks.find(g => g.week === week);
-          if (!gw || !Array.isArray(gw.images)) return;
-          gw.images.splice(idx, 1);
-          saveProfileMerged();
-          renderGameweeks();
-        });
-      });
+      wireGameweekFormationDrag();
+      wireFormationTitleEditing();
+      wireDotLabelEditing();
     }
 
     function handleImageFiles(inp, files) {
@@ -2641,7 +2586,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         players = getSquadFromInputs();
         if (!players.length) {
           alert('Please enter at least one player name before saving.');
-          showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+          renderGameweeks(); // shows/hides control bar based on players
           saveProfileMerged();
           return;
         }
@@ -2656,7 +2601,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         players = [];
  renderSquad();
  renderSeasonTable();
-        showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+        renderGameweeks(); // shows/hides control bar based on players
         saveProfileMerged();
       });
     }
@@ -2707,7 +2652,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
  renderGameweeks();
  renderSeasonTable();
       } else {
-        showLocked('gameweeks', 'Save your squad in Step 3 to unlock the Gameweek Tracker.');
+        renderGameweeks(); // shows/hides control bar based on players
       }
 
       saveProfileMerged();
