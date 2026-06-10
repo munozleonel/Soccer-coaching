@@ -1,8 +1,8 @@
 {
   "version": 4,
-  "savedAt": "2026-06-09T11:58:36.606Z",
+  "savedAt": "2026-06-10T11:21:54.624Z",
   "team": {
-    "teamName": "Catley Orange",
+    "teamName": "Fowler Orange",
     "squadSize": 12,
     "onField": 9,
     "gender": "female",
@@ -1600,7 +1600,7 @@
       "opponent": "WINSTON HILLS CATLEY ORANGE",
       "matchReport": "First game in the Catley division after being regraded, we knew we were going to be up against much tougher opponents. \nWe had our moments and battled hard with our physicality, however it was not enough to avoid the first loss of the season. \nOur opponents passed and pressured well, leaving us with very little time on the ball. \nAt the final whistle, the girls were down on themselves however we should be encouraged that\n- we stayed competitive\n- it showed where we can improve individually and as team\n- the goals we conceded can be avoided with basic drills. \nKeep your heads up Rangers!   ",
       "success": "We stayed competitive despite a level up in competition.\nTackled and being physical without fouling. \n\n",
-      "improvements": "1. Jewellery - Parents please ensure jewellery (necklace, earrings, rings, etc) are not worn at games, otherwise players will not be allowed to play. Earrings which cannot be removed must be taped up with tan coloured tape.   \n2. Our goal kicks - Know who to pass the ball to, and what positions we need to be in. \n3. Positions - Right, Left, Upfront, Back, Midfield, Everywhere. If we don't stick to our allocated positions, we will be exposed when being attacked and will lose opportunities when we are on the attack.\n4. Time on the ball - quicker decisions and movements to avoid pressure. \n",
+      "improvements": "1. Jewellery - Parents please ensure jewellery (necklace, earrings, rings, etc) are not worn at games, otherwise players will not be allowed to play. Earrings which cannot be removed must be taped up with tan coloured tape.   \n2. Our goal kicks - Know who to pass the ball to, and what positions we need to be in. \n3. Positions - Right, Left, Upfront, Back, Midfield, Everywhere. If we don't stick to our allocated positions, we will be exposed when being attacked and will lose opportunities when we are on the attack.\n4. Time on the ball - quicker decisions and movements to avoid pressure. \n5. Passing to players space",
       "publishedFile": "gameweek9.html",
       "images": []
     },
@@ -1647,7 +1647,7 @@
       ],
       "dotLabels": [],
       "attendance": {
-        "Ariane": "N",
+        "Ariane": "Y",
         "Bridgette": "N",
         "Cayley": "N",
         "Chante": "N",
@@ -1760,13 +1760,13 @@
           "h2": ""
         }
       },
-      "result": "",
-      "scoreFor": 0,
+      "result": "Win",
+      "scoreFor": 1,
       "scoreAgainst": 0,
       "htScoreFor": 0,
       "htScoreAgainst": 0,
-      "matchDate": "",
-      "opponent": "",
+      "matchDate": "2026-06-14",
+      "opponent": "NORWEST CATLEY",
       "matchReport": "",
       "success": "",
       "improvements": "",
