@@ -1,8 +1,8 @@
 {
   "version": 4,
-  "savedAt": "2026-06-09T11:58:36.606Z",
+  "savedAt": "2026-06-10T11:16:57.639Z",
   "team": {
-    "teamName": "Catley Orange",
+    "teamName": "Fowler Orange",
     "squadSize": 12,
     "onField": 9,
     "gender": "female",
@@ -1647,7 +1647,7 @@
       ],
       "dotLabels": [],
       "attendance": {
-        "Ariane": "N",
+        "Ariane": "Y",
         "Bridgette": "N",
         "Cayley": "N",
         "Chante": "N",
