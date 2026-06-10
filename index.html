@@ -1890,8 +1890,11 @@
               <button class="btn" onclick="submitTeam()">⚽ Build My Program</button>
               <button class="btn btn-ghost" id="downloadBtn" onclick="downloadProfile()" disabled>⬇ Download Profile</button>
               <button class="btn btn-ghost" onclick="document.getElementById('uploadInput').click()">⬆ Upload Profile</button>
+              <button class="btn btn-ghost" id="githubSaveBtn" onclick="saveToGitHub()" disabled>☁ Save to GitHub</button>
+              <button class="btn btn-ghost" id="githubFetchBtn" onclick="fetchFromGitHub(true)">⬇ Sync from GitHub</button>
               <button class="btn btn-ghost" onclick="resetAll()">♻ Reset</button>
               <input type="file" id="uploadInput" accept="application/json" style="display:none" />
+              <div id="githubStatus" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:0.72rem;margin-top:6px;display:none"></div>
             </div>
           </section>
 
@@ -1974,6 +1977,192 @@
 
     // ===== Profile storage =====
     const PROFILE_STORAGE_KEY = 'pitchperfect_profile_v4';
+
+    // ===== GitHub Sync Config =====
+    const GH_OWNER  = 'munozleonel';
+    const GH_REPO   = 'Soccer-coaching';
+    const GH_FILE   = 'pitchperfect_Fowler_Orange_2026-06-09.json';
+    const GH_BRANCH = 'main';
+    const GH_PAT_KEY = 'pitchperfect_gh_pat';
+
+    const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`;
+    const GH_API_URL = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+    function getGHToken() { try { return localStorage.getItem(GH_PAT_KEY) || ''; } catch(e) { return ''; } }
+    function setGHToken(t) { try { localStorage.setItem(GH_PAT_KEY, t); } catch(e) {} }
+
+    function setGHStatus(msg, colour) {
+      const el = document.getElementById('githubStatus');
+      if (!el) return;
+      el.style.display = msg ? '' : 'none';
+      el.style.color = colour || 'var(--muted2)';
+      el.textContent = msg;
+    }
+
+    function promptForPAT() {
+      return new Promise((resolve) => {
+        const old = document.getElementById('patModal');
+        if (old) old.remove();
+        const modal = document.createElement('div');
+        modal.id = 'patModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(5,8,15,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px';
+        modal.innerHTML = `
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:36px;max-width:480px;width:100%;position:relative">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--volt);margin-bottom:12px">GitHub Personal Access Token</div>
+            <h2 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.8rem;text-transform:uppercase;color:var(--white);margin-bottom:12px">Connect to GitHub</h2>
+            <p style="color:var(--muted2);font-size:0.88rem;line-height:1.6;margin-bottom:20px">
+              To save data back to your repo, you need a Personal Access Token with <strong style="color:var(--white)">repo</strong> scope.<br><br>
+              <a href="https://github.com/settings/tokens/new?scopes=repo&description=SoccerCoaching" target="_blank" style="color:var(--volt)">&#x2192; Create a token on GitHub</a>
+            </p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+              <label style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted2)">Paste your token</label>
+              <input id="patInput" type="password" placeholder="ghp_..." autocomplete="off"
+                style="background:var(--surface3);border:1px solid var(--border2);border-radius:8px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;padding:12px 16px;outline:none;" />
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted2);cursor:pointer">
+                <input type="checkbox" id="patRemember" checked style="accent-color:var(--volt)" />
+                Remember in this browser (stored in localStorage)
+              </label>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button id="patOK" style="background:var(--volt);color:var(--ink);border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:12px 24px;cursor:pointer">Connect</button>
+              <button id="patCancel" style="background:transparent;color:var(--muted2);border:1px solid var(--border2);border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:12px 24px;cursor:pointer">Cancel</button>
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
+        const inp = modal.querySelector('#patInput');
+        const existing = getGHToken();
+        if (existing) inp.value = existing;
+        inp.focus();
+        modal.querySelector('#patOK').onclick = () => {
+          const val = inp.value.trim();
+          if (!val) { inp.style.borderColor = 'var(--red)'; return; }
+          if (modal.querySelector('#patRemember').checked) setGHToken(val);
+          modal.remove();
+          resolve(val);
+        };
+        modal.querySelector('#patCancel').onclick = () => { modal.remove(); resolve(null); };
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') modal.querySelector('#patOK').click(); });
+      });
+    }
+
+    async function fetchFromGitHub(manual) {
+      const btn = document.getElementById('githubFetchBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing\u2026'; }
+      if (manual) setGHStatus('Fetching profile from GitHub\u2026', 'var(--muted2)');
+      try {
+        const res = await fetch(GH_RAW_URL + '?cb=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const profile = await res.json();
+        if (!profile || typeof profile !== 'object' || !profile.team) throw new Error('Invalid profile');
+
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+
+        teamData = profile.team;
+        lastFormations = profile.formations || null;
+        selectedFormation = profile.selectedFormation || null;
+        formationOverrides = profile.formationOverrides || {};
+        players = Array.isArray(profile.players) ? profile.players : [];
+        gameweeks = Array.isArray(profile.gameweeks) ? profile.gameweeks : [];
+        rehydrateImages(gameweeks);
+
+        applyTeamToUI(teamData);
+        unlockSection('formation');
+        unlockSection('squad');
+
+        if (lastFormations && Array.isArray(lastFormations) && lastFormations.length) {
+          document.getElementById('formationLoader').classList.remove('visible');
+          renderFormationsFromData(lastFormations);
+        } else {
+          await generateFormations();
+        }
+
+        renderSquad();
+        if (players.length) {
+          reconcileGameweeks();
+          renderGameweeks();
+          renderSeasonTable();
+        } else {
+          renderGameweeks();
+        }
+        saveProfileMerged();
+
+        const saveBtn = document.getElementById('githubSaveBtn');
+        if (saveBtn) saveBtn.disabled = false;
+        setGHStatus('\u2713 Loaded from GitHub \u00b7 ' + new Date().toLocaleTimeString(), 'var(--green)');
+        if (manual) setTimeout(() => setGHStatus('', ''), 4000);
+      } catch (e) {
+        console.warn('GitHub fetch failed:', e);
+        if (manual) setGHStatus('\u2717 Could not load from GitHub: ' + e.message, 'var(--red)');
+        else setGHStatus('', '');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '\u2B07 Sync from GitHub'; }
+      }
+    }
+
+    async function saveToGitHub() {
+      let token = getGHToken();
+      if (!token) {
+        token = await promptForPAT();
+        if (!token) return;
+      }
+
+      const btn = document.getElementById('githubSaveBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving\u2026'; }
+      setGHStatus('Pushing to GitHub\u2026', 'var(--muted2)');
+
+      try {
+        const profile = loadProfile() || buildProfileObject();
+        if (teamData) profile.team = teamData;
+        saveProfileMerged();
+        const merged = loadProfile() || profile;
+        rehydrateImages(merged.gameweeks || []);
+
+        const jsonStr = JSON.stringify(merged, null, 2);
+        // btoa with unicode support
+        const content = btoa(unescape(encodeURIComponent(jsonStr)));
+
+        // Get current SHA
+        let sha = null;
+        try {
+          const shaRes = await fetch(GH_API_URL, {
+            headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }
+          });
+          if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha; }
+        } catch (_) {}
+
+        const body = {
+          message: 'Update profile \u00b7 ' + new Date().toISOString().slice(0, 10),
+          content,
+          branch: GH_BRANCH
+        };
+        if (sha) body.sha = sha;
+
+        const putRes = await fetch(GH_API_URL, {
+          method: 'PUT',
+          headers: {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!putRes.ok) {
+          const err = await putRes.json().catch(() => ({}));
+          if (putRes.status === 401) { setGHToken(''); throw new Error('Invalid token (401) \u2014 re-enter your PAT next save.'); }
+          throw new Error(err.message || `HTTP ${putRes.status}`);
+        }
+
+        setGHStatus('\u2713 Saved to GitHub \u00b7 ' + new Date().toLocaleTimeString(), 'var(--green)');
+        setTimeout(() => setGHStatus('', ''), 5000);
+      } catch (e) {
+        console.error('GitHub save failed:', e);
+        setGHStatus('\u2717 Save failed: ' + e.message, 'var(--red)');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '\u2601 Save to GitHub'; }
+      }
+    }
+
 
     // ===== State =====
     let teamData = null;
@@ -3665,16 +3854,39 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       wireSquadButtons();
       wireGameweekButtons();
 
-      const saved = loadProfile();
-      if (!saved || !saved.team) return;
+      // ── Try to load from GitHub first; fall back to localStorage ──
+      let loadedFromGH = false;
+      try {
+        const ghRes = await fetch(GH_RAW_URL + '?cb=' + Date.now());
+        if (ghRes.ok) {
+          const profile = await ghRes.json();
+          if (profile && profile.team) {
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+            loadedFromGH = true;
+            teamData = profile.team;
+            lastFormations = profile.formations || null;
+            selectedFormation = profile.selectedFormation || null;
+            formationOverrides = profile.formationOverrides || {};
+            players = Array.isArray(profile.players) ? profile.players : [];
+            gameweeks = Array.isArray(profile.gameweeks) ? profile.gameweeks : [];
+            rehydrateImages(gameweeks);
+            setGHStatus('✓ Profile loaded from GitHub', 'var(--green)');
+            setTimeout(() => setGHStatus('', ''), 3000);
+          }
+        }
+      } catch (_) { /* offline or fetch failed — fall through to localStorage */ }
 
-      teamData = saved.team;
-      lastFormations = saved.formations || null;
-      selectedFormation = saved.selectedFormation || null;
-      formationOverrides = saved.formationOverrides || {};
-      players = Array.isArray(saved.players) ? saved.players : [];
-      gameweeks = Array.isArray(saved.gameweeks) ? saved.gameweeks : [];
-      rehydrateImages(gameweeks);
+      if (!loadedFromGH) {
+        const saved = loadProfile();
+        if (!saved || !saved.team) return;
+        teamData = saved.team;
+        lastFormations = saved.formations || null;
+        selectedFormation = saved.selectedFormation || null;
+        formationOverrides = saved.formationOverrides || {};
+        players = Array.isArray(saved.players) ? saved.players : [];
+        gameweeks = Array.isArray(saved.gameweeks) ? saved.gameweeks : [];
+        rehydrateImages(gameweeks);
+      }
 
       applyTeamToUI(teamData);
 
@@ -3691,13 +3903,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
       if (players.length) {
         reconcileGameweeks();
- renderGameweeks();
- renderSeasonTable();
+        renderGameweeks();
+        renderSeasonTable();
       } else {
-        renderGameweeks(); // shows/hides control bar based on players
+        renderGameweeks();
       }
 
       saveProfileMerged();
+      const saveBtn = document.getElementById('githubSaveBtn');
+      if (saveBtn) saveBtn.disabled = false;
     });
   </script>
 </body>
