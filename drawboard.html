@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soccer Drill Drawing Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+  :root {
+    --grass: #2d6a2d;
+    --grass-light: #368c36;
+    --pitch-line: rgba(255,255,255,0.85);
+    --toolbar-bg: #111418;
+    --toolbar-border: #2a2f38;
+    --accent: #00e676;
+    --accent-hover: #69f0ae;
+    --accent-dim: rgba(0,230,118,0.15);
+    --btn-bg: #1c2128;
+    --btn-hover: #252c36;
+    --btn-active: #00e676;
+    --text: #e8eaf0;
+    --text-dim: #8892a0;
+    --danger: #ff5252;
+    --warn: #ffab40;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #0d1117;
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--toolbar-border);
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--text-dim); font-weight: 400; }
+
+  .header-sep { flex: 1; }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--toolbar-border);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .tool-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-right: 10px;
+    border-right: 1px solid var(--toolbar-border);
+  }
+  .tool-group:last-child { border-right: none; }
+
+  .group-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-right: 2px;
+  }
+
+  .tool-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--toolbar-border);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 500;
+  }
+  .tool-btn:hover { background: var(--btn-hover); border-color: #444; }
+  .tool-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tool-btn svg { flex-shrink: 0; }
+
+  .tool-btn.danger:hover { background: rgba(255,82,82,0.15); border-color: var(--danger); color: var(--danger); }
+
+  /* Color swatches */
+  .color-strip {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .color-swatch {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s;
+    flex-shrink: 0;
+  }
+  .color-swatch:hover { transform: scale(1.2); }
+  .color-swatch.active { border-color: var(--white); transform: scale(1.15); }
+
+  /* Line style selector */
+  select {
+    background: var(--btn-bg);
+    border: 1px solid var(--toolbar-border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 5px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+  select:hover { border-color: #444; }
+
+  /* ── MAIN CANVAS AREA ── */
+  .canvas-wrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #080b0f;
+    position: relative;
+  }
+
+  canvas {
+    display: block;
+    cursor: crosshair;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    background: var(--toolbar-bg);
+    border-top: 1px solid var(--toolbar-border);
+    padding: 4px 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  .statusbar b { color: var(--accent); font-weight: 600; }
+
+  /* ── CONTEXT MENU ── */
+  #ctx-menu {
+    position: fixed;
+    background: #1c2128;
+    border: 1px solid var(--toolbar-border);
+    border-radius: 8px;
+    padding: 6px 0;
+    z-index: 1000;
+    display: none;
+    min-width: 160px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  #ctx-menu.visible { display: block; }
+  .ctx-item {
+    padding: 7px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+  }
+  .ctx-item:hover { background: var(--btn-hover); }
+  .ctx-item.danger:hover { background: rgba(255,82,82,0.15); color: var(--danger); }
+  .ctx-sep { border-top: 1px solid var(--toolbar-border); margin: 4px 0; }
+
+  /* ── TOOLTIP ── */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2f38;
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 99;
+    border: 1px solid var(--toolbar-border);
+  }
+
+  /* Shortcut badge inside header */
+  .kbd {
+    display: inline-block;
+    background: #2a2f38;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: monospace;
+    color: var(--text-dim);
+    margin-left: 2px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚽ SOCCER<span>DRAW</span></div>
+  <div class="header-sep"></div>
+  <button class="tool-btn" id="btn-download-png" data-tip="Download as PNG">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    PNG
+  </button>
+  <button class="tool-btn" id="btn-erase-all" style="color:var(--danger);border-color:#3a2020;" data-tip="Erase all objects">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+    Erase Drawing
+  </button>
+</header>
+
+<div class="toolbar">
+
+  <!-- Field layouts -->
+  <div class="tool-group">
+    <span class="group-label">Field</span>
+    <button class="tool-btn active" id="field-full" data-tip="Full field">
+      <svg width="14" height="10" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="26" height="18" rx="1"/><line x1="14" y1="1" x2="14" y2="19"/><circle cx="14" cy="10" r="3"/></svg>
+      Full
+    </button>
+    <button class="tool-btn" id="field-half" data-tip="Half field">
+      <svg width="14" height="10" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="26" height="18" rx="1"/><line x1="14" y1="1" x2="14" y2="19"/></svg>
+      Half
+    </button>
+    <button class="tool-btn" id="field-thirds" data-tip="Attacking third">
+      <svg width="14" height="10" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="18" rx="1"/></svg>
+      Third
+    </button>
+    <button class="tool-btn" id="field-blank" data-tip="Blank canvas">
+      <svg width="14" height="10" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="26" height="18" rx="1" stroke-dasharray="4 2"/></svg>
+      Blank
+    </button>
+  </div>
+
+  <!-- Tools -->
+  <div class="tool-group">
+    <span class="group-label">Tool</span>
+    <button class="tool-btn active" id="tool-move" data-tip="Move / Select (M)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M12 3v18M3 12h18"/></svg>
+      Move <span class="kbd">M</span>
+    </button>
+    <button class="tool-btn" id="tool-line" data-tip="Draw line (L)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+      Line <span class="kbd">L</span>
+    </button>
+    <button class="tool-btn" id="tool-arrow" data-tip="Draw arrow (A)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>
+      Arrow <span class="kbd">A</span>
+    </button>
+    <button class="tool-btn" id="tool-dribble" data-tip="Dribble path (D)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"><path d="M5 19 Q12 5 19 5"/></svg>
+      Dribble <span class="kbd">D</span>
+    </button>
+    <button class="tool-btn" id="tool-text" data-tip="Add text (T)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      Text <span class="kbd">T</span>
+    </button>
+    <button class="tool-btn" id="tool-zone" data-tip="Draw zone (Z)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" opacity="0.6"/></svg>
+      Zone <span class="kbd">Z</span>
+    </button>
+  </div>
+
+  <!-- Players -->
+  <div class="tool-group">
+    <span class="group-label">Players</span>
+    <button class="tool-btn" id="obj-player-a" data-tip="Add Team A player (1)">
+      <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5" fill="#e53935"/><path d="M3 21c0-5 18-5 18 0" fill="#e53935"/></svg>
+      Team A
+    </button>
+    <button class="tool-btn" id="obj-player-b" data-tip="Add Team B player (2)">
+      <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5" fill="#1e88e5"/><path d="M3 21c0-5 18-5 18 0" fill="#1e88e5"/></svg>
+      Team B
+    </button>
+    <button class="tool-btn" id="obj-gk" data-tip="Add Goalkeeper (G)">
+      <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5" fill="#f9a825"/><path d="M3 21c0-5 18-5 18 0" fill="#f9a825"/></svg>
+      GK
+    </button>
+  </div>
+
+  <!-- Objects -->
+  <div class="tool-group">
+    <span class="group-label">Objects</span>
+    <button class="tool-btn" id="obj-ball" data-tip="Add ball (B)">⚽ Ball</button>
+    <button class="tool-btn" id="obj-cone" data-tip="Add cone (C)">🔶 Cone</button>
+    <button class="tool-btn" id="obj-goal" data-tip="Add goal">⬜ Goal</button>
+  </div>
+
+  <!-- Size -->
+  <div class="tool-group">
+    <span class="group-label">Size</span>
+    <button class="tool-btn" id="btn-size-up" data-tip="Increase size (+)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      +
+    </button>
+    <button class="tool-btn" id="btn-size-down" data-tip="Decrease size (-)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      –
+    </button>
+    <button class="tool-btn" id="btn-rotate" data-tip="Rotate (R)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0117.8-6.3M22 12a10 10 0 01-17.8 6.3"/></svg>
+      Rotate
+    </button>
+  </div>
+
+  <!-- Colors -->
+  <div class="tool-group">
+    <span class="group-label">Color</span>
+    <div class="color-strip" id="color-strip">
+      <div class="color-swatch active" style="background:#ffffff" data-color="#ffffff"></div>
+      <div class="color-swatch" style="background:#e53935" data-color="#e53935"></div>
+      <div class="color-swatch" style="background:#1e88e5" data-color="#1e88e5"></div>
+      <div class="color-swatch" style="background:#00e676" data-color="#00e676"></div>
+      <div class="color-swatch" style="background:#f9a825" data-color="#f9a825"></div>
+      <div class="color-swatch" style="background:#ab47bc" data-color="#ab47bc"></div>
+      <div class="color-swatch" style="background:#ff7043" data-color="#ff7043"></div>
+      <div class="color-swatch" style="background:#26c6da" data-color="#26c6da"></div>
+      <div class="color-swatch" style="background:#212121" data-color="#212121"></div>
+    </div>
+  </div>
+
+  <!-- Line style -->
+  <div class="tool-group">
+    <span class="group-label">Line</span>
+    <select id="line-style">
+      <option value="solid">──── Solid</option>
+      <option value="dashed">- - - Dashed</option>
+      <option value="dotted">· · · Dotted</option>
+    </select>
+    <select id="line-width">
+      <option value="2">Thin</option>
+      <option value="3" selected>Normal</option>
+      <option value="5">Thick</option>
+    </select>
+  </div>
+
+  <!-- Undo/Redo -->
+  <div class="tool-group">
+    <button class="tool-btn" id="btn-undo" data-tip="Undo (Ctrl+Z)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+    </button>
+    <button class="tool-btn" id="btn-redo" data-tip="Redo (Ctrl+Y)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+    </button>
+    <button class="tool-btn" id="btn-delete" data-tip="Delete selected (Del)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="statusbar">
+  <span>Tool: <b id="status-tool">Move</b></span>
+  <span>Color: <b id="status-color" style="color:#fff">White</b></span>
+  <span>Objects: <b id="status-count">0</b></span>
+  <span style="margin-left:auto; opacity:0.5">Shortcuts: M Move · L Line · A Arrow · D Dribble · T Text · Z Zone · Del Delete · Ctrl+Z Undo · + / – Size</span>
+</div>
+
+<!-- Context Menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" id="ctx-delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg> Delete</div>
+  <div class="ctx-item" id="ctx-size-up"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Increase Size</div>
+  <div class="ctx-item" id="ctx-size-down"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg> Decrease Size</div>
+  <div class="ctx-item" id="ctx-rotate"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0117.8-6.3M22 12a10 10 0 01-17.8 6.3"/></svg> Rotate</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-color-red" style="color:#e53935">● Red</div>
+  <div class="ctx-item" id="ctx-color-blue" style="color:#1e88e5">● Blue</div>
+  <div class="ctx-item" id="ctx-color-yellow" style="color:#f9a825">● Yellow</div>
+  <div class="ctx-item" id="ctx-color-white" style="color:#ccc">● White</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctx-delete2">🗑 Remove</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// ── State ──────────────────────────────────────────────────────────────
+let fieldType = 'full';
+let currentTool = 'move';
+let currentColor = '#ffffff';
+let lineStyle = 'solid';
+let lineWidth = 3;
+
+let objects = [];
+let lines = [];
+let selectedObj = null;
+let selectedLine = null;
+let undoStack = [];
+let redoStack = [];
+
+let dragging = false;
+let dragStartX = 0, dragStartY = 0;
+let dragObjStart = null;
+
+let lineDrawing = false;
+let lineStart = null;
+let linePreview = null;
+
+let zoneDrawing = false;
+let zoneStart = null;
+let zonePreview = null;
+
+// ── Canvas sizing ──────────────────────────────────────────────────────
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const maxW = wrap.clientWidth - 40;
+  const maxH = wrap.clientHeight - 40;
+  const ratio = 1.5; // W:H
+  let w = Math.min(maxW, maxH * ratio);
+  let h = w / ratio;
+  if (h > maxH) { h = maxH; w = h * ratio; }
+  canvas.width = Math.floor(w);
+  canvas.height = Math.floor(h);
+  redraw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ── Field drawing ──────────────────────────────────────────────────────
+function drawField() {
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#2d6a2d';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grass stripes
+  for (let i = 0; i < 12; i++) {
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.03)';
+    ctx.fillRect(0, i * H / 12, W, H / 12);
+  }
+
+  if (fieldType === 'blank') return;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  if (fieldType === 'full') drawFullField(W, H);
+  else if (fieldType === 'half') drawHalfField(W, H);
+  else if (fieldType === 'thirds') drawThird(W, H);
+}
+
+function drawFullField(W, H) {
+  const m = W * 0.05;
+  const fw = W - m * 2, fh = H - m * 2;
+  const fx = m, fy = m;
+
+  // Outer boundary
+  roundRect(fx, fy, fw, fh, 3);
+
+  // Centre line
+  ctx.beginPath(); ctx.moveTo(fx + fw/2, fy); ctx.lineTo(fx + fw/2, fy + fh); ctx.stroke();
+
+  // Centre circle
+  const cr = fh * 0.13;
+  ctx.beginPath(); ctx.arc(fx + fw/2, fy + fh/2, cr, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(fx + fw/2, fy + fh/2, 3, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+
+  // Penalty areas
+  const paW = fw * 0.15, paH = fh * 0.42;
+  roundRect(fx, fy + (fh - paH)/2, paW, paH, 2);
+  roundRect(fx + fw - paW, fy + (fh - paH)/2, paW, paH, 2);
+
+  // 6-yard boxes
+  const gbW = fw * 0.055, gbH = fh * 0.18;
+  roundRect(fx, fy + (fh - gbH)/2, gbW, gbH, 1);
+  roundRect(fx + fw - gbW, fy + (fh - gbH)/2, gbW, gbH, 1);
+
+  // Goals
+  const goalW = fw * 0.015, goalH = fh * 0.1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  roundRect(fx - goalW, fy + (fh - goalH)/2, goalW, goalH, 1);
+  roundRect(fx + fw, fy + (fh - goalH)/2, goalW, goalH, 1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+
+  // Penalty spots
+  dot(fx + paW * 0.6, fy + fh/2);
+  dot(fx + fw - paW * 0.6, fy + fh/2);
+
+  // Corner arcs
+  cornerArc(fx, fy, 0);
+  cornerArc(fx + fw, fy, Math.PI/2);
+  cornerArc(fx + fw, fy + fh, Math.PI);
+  cornerArc(fx, fy + fh, -Math.PI/2);
+}
+
+function drawHalfField(W, H) {
+  const m = W * 0.05;
+  const fw = W - m * 2, fh = H - m * 2;
+  const fx = m, fy = m;
+
+  roundRect(fx, fy, fw, fh, 3);
+
+  // Centre line (bottom)
+  ctx.beginPath(); ctx.moveTo(fx, fy + fh); ctx.lineTo(fx + fw, fy + fh); ctx.stroke();
+  // Centre arc
+  ctx.beginPath(); ctx.arc(fx + fw/2, fy + fh, fh * 0.13, Math.PI, 0); ctx.stroke();
+
+  // Penalty area
+  const paW = fw * 0.55, paH = fh * 0.38;
+  roundRect(fx + (fw - paW)/2, fy, paW, paH, 2);
+
+  // 6-yard box
+  const gbW = fw * 0.22, gbH = fh * 0.15;
+  roundRect(fx + (fw - gbW)/2, fy, gbW, gbH, 1);
+
+  // Goal
+  const goalW = fw * 0.14, goalH = fh * 0.04;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  roundRect(fx + (fw - goalW)/2, fy - goalH, goalW, goalH, 1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+
+  // Penalty spot
+  dot(fx + fw/2, fy + paH * 0.7);
+
+  // Corner arcs
+  cornerArc(fx, fy, 0);
+  cornerArc(fx + fw, fy, Math.PI/2);
+}
+
+function drawThird(W, H) {
+  const m = W * 0.05;
+  const fw = W - m * 2, fh = H - m * 2;
+  const fx = m, fy = m;
+
+  roundRect(fx, fy, fw, fh, 3);
+
+  const paW = fw * 0.55, paH = fh * 0.5;
+  roundRect(fx + (fw - paW)/2, fy, paW, paH, 2);
+
+  const gbW = fw * 0.22, gbH = fh * 0.22;
+  roundRect(fx + (fw - gbW)/2, fy, gbW, gbH, 1);
+
+  const goalW = fw * 0.14, goalH = fh * 0.06;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  roundRect(fx + (fw - goalW)/2, fy - goalH, goalW, goalH, 1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+
+  dot(fx + fw/2, fy + paH * 0.75);
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.stroke();
+}
+
+function dot(x, y) {
+  ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+}
+
+function cornerArc(cx, cy, startAngle) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, canvas.width * 0.02, startAngle, startAngle + Math.PI/2);
+  ctx.stroke();
+}
+
+// ── Object drawing ─────────────────────────────────────────────────────
+function drawObjects() {
+  objects.forEach(obj => {
+    const sel = obj === selectedObj;
+    drawObject(obj, sel);
+  });
+}
+
+function drawObject(obj, selected) {
+  ctx.save();
+  ctx.translate(obj.x, obj.y);
+  ctx.rotate((obj.rotation || 0) * Math.PI / 180);
+  const s = obj.size || 1;
+
+  if (selected) {
+    ctx.shadowColor = '#00e676';
+    ctx.shadowBlur = 10;
+  }
+
+  switch (obj.type) {
+    case 'player-a':
+    case 'player-b':
+    case 'gk': {
+      const colors = { 'player-a': '#e53935', 'player-b': '#1e88e5', 'gk': '#f9a825' };
+      const c = colors[obj.type] || '#fff';
+      const r = 14 * s;
+      ctx.beginPath(); ctx.arc(0, -r * 0.4, r * 0.55, 0, Math.PI*2);
+      ctx.fillStyle = c; ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Body
+      ctx.beginPath();
+      ctx.arc(0, r * 0.8, r * 0.8, Math.PI, 0);
+      ctx.fillStyle = c; ctx.fill(); ctx.stroke();
+      // Number
+      if (obj.number) {
+        ctx.fillStyle = 'white';
+        ctx.font = `bold ${10 * s}px Barlow Condensed, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(obj.number, 0, r * 0.8);
+      }
+      break;
+    }
+    case 'ball': {
+      const r = 10 * s;
+      // Shadow
+      ctx.beginPath(); ctx.ellipse(2, r, r * 0.7, r * 0.25, 0, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2);
+      ctx.fillStyle = 'white'; ctx.fill();
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+      // Pentagon pattern
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 72 - 90) * Math.PI / 180;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*r*0.38, Math.sin(a)*r*0.38);
+        ctx.arc(0, 0, r*0.38, a, a + 72*Math.PI/180);
+        ctx.fillStyle = '#333'; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2);
+      ctx.stroke();
+      break;
+    }
+    case 'cone': {
+      const h = 22 * s, w = 16 * s;
+      ctx.beginPath();
+      ctx.moveTo(-w/2, h/2); ctx.lineTo(w/2, h/2); ctx.lineTo(0, -h/2); ctx.closePath();
+      const grad = ctx.createLinearGradient(-w/2, 0, w/2, 0);
+      grad.addColorStop(0, '#e65100'); grad.addColorStop(0.5, '#ff9800'); grad.addColorStop(1, '#bf360c');
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+      // Stripe
+      ctx.beginPath(); ctx.moveTo(-w*0.3, h/2 - h*0.3); ctx.lineTo(w*0.3, h/2 - h*0.3);
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.stroke();
+      break;
+    }
+    case 'goal': {
+      const gw = 60 * s, gh = 20 * s, depth = 12 * s;
+      ctx.strokeStyle = obj.color || 'white';
+      ctx.lineWidth = 2.5;
+      // Front
+      ctx.strokeRect(-gw/2, -gh/2, gw, gh);
+      // Depth lines
+      ctx.beginPath();
+      ctx.moveTo(-gw/2, -gh/2); ctx.lineTo(-gw/2 + depth, -gh/2 - depth);
+      ctx.moveTo(gw/2, -gh/2); ctx.lineTo(gw/2 + depth, -gh/2 - depth);
+      ctx.moveTo(-gw/2, gh/2); ctx.lineTo(-gw/2 + depth, gh/2 - depth);
+      ctx.moveTo(gw/2, gh/2); ctx.lineTo(gw/2 + depth, gh/2 - depth);
+      ctx.stroke();
+      // Back
+      ctx.strokeRect(-gw/2 + depth, -gh/2 - depth, gw, gh);
+      // Net lines
+      ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      for (let xi = 1; xi < 5; xi++) {
+        const xx = -gw/2 + (gw / 5) * xi;
+        ctx.beginPath(); ctx.moveTo(xx, -gh/2); ctx.lineTo(xx, gh/2); ctx.stroke();
+      }
+      break;
+    }
+    case 'text': {
+      ctx.font = `bold ${14 * s}px Barlow Condensed, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = obj.color || 'white';
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
+      ctx.strokeText(obj.text || 'Text', 0, 0);
+      ctx.fillText(obj.text || 'Text', 0, 0);
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+// ── Line drawing ───────────────────────────────────────────────────────
+function drawLines() {
+  lines.forEach(l => {
+    const sel = l === selectedLine;
+    drawLine(l, sel);
+  });
+}
+
+function drawLine(l, selected) {
+  ctx.save();
+  ctx.strokeStyle = l.color || '#ffffff';
+  ctx.lineWidth = l.width || 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (selected) {
+    ctx.shadowColor = '#00e676';
+    ctx.shadowBlur = 8;
+  }
+
+  if (l.style === 'dashed') ctx.setLineDash([8, 6]);
+  else if (l.style === 'dotted') ctx.setLineDash([2, 5]);
+  else ctx.setLineDash([]);
+
+  if (l.type === 'zone') {
+    ctx.fillStyle = l.color ? l.color.replace(')', ',0.12)').replace('rgb', 'rgba') : 'rgba(255,255,255,0.12)';
+    if (l.color && l.color.startsWith('#')) {
+      const hex = l.color.slice(1);
+      const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.15)`;
+    }
+    const x = Math.min(l.x1, l.x2), y = Math.min(l.y1, l.y2);
+    const w = Math.abs(l.x2 - l.x1), h = Math.abs(l.y2 - l.y1);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+  } else {
+    ctx.beginPath();
+    if (l.type === 'dribble') {
+      // Wavy line
+      const dx = l.x2 - l.x1, dy = l.y2 - l.y1;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      const segs = Math.max(4, Math.floor(len / 20));
+      ctx.moveTo(l.x1, l.y1);
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        const mx = l.x1 + dx * (t - 0.5/segs);
+        const my = l.y1 + dy * (t - 0.5/segs);
+        const perp = (-dy / len) * 6 * Math.sin(i * Math.PI);
+        const perpY = (dx / len) * 6 * Math.sin(i * Math.PI);
+        ctx.lineTo(mx + perp + (dx/len)*3, my + perpY + (dy/len)*3);
+      }
+      ctx.lineTo(l.x2, l.y2);
+      ctx.setLineDash([5, 4]);
+    } else {
+      ctx.moveTo(l.x1, l.y1);
+      ctx.lineTo(l.x2, l.y2);
+    }
+    ctx.stroke();
+
+    // Arrow head
+    if (l.type === 'arrow' || l.type === 'dribble') {
+      const dx = l.x2 - l.x1, dy = l.y2 - l.y1;
+      const angle = Math.atan2(dy, dx);
+      const len = 14;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(l.x2, l.y2);
+      ctx.lineTo(l.x2 - len * Math.cos(angle - 0.4), l.y2 - len * Math.sin(angle - 0.4));
+      ctx.moveTo(l.x2, l.y2);
+      ctx.lineTo(l.x2 - len * Math.cos(angle + 0.4), l.y2 - len * Math.sin(angle + 0.4));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawPreviewLine(x2, y2) {
+  if (!lineStart) return;
+  const tmp = { x1: lineStart.x, y1: lineStart.y, x2, y2, type: currentTool, color: currentColor, style: lineStyle, width: parseInt(lineWidth) };
+  drawLine(tmp, false);
+}
+
+function drawPreviewZone(x2, y2) {
+  if (!zoneStart) return;
+  const tmp = { x1: zoneStart.x, y1: zoneStart.y, x2, y2, type: 'zone', color: currentColor, style: lineStyle, width: 2 };
+  drawLine(tmp, false);
+}
+
+// ── Full redraw ────────────────────────────────────────────────────────
+function redraw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawField();
+  drawLines();
+  drawObjects();
+}
+
+// ── Save state ─────────────────────────────────────────────────────────
+function saveState() {
+  undoStack.push(JSON.stringify({ objects, lines }));
+  if (undoStack.length > 50) undoStack.shift();
+  redoStack = [];
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify({ objects, lines }));
+  const state = JSON.parse(undoStack.pop());
+  objects = state.objects; lines = state.lines;
+  selectedObj = null; selectedLine = null;
+  redraw(); updateStatus();
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify({ objects, lines }));
+  const state = JSON.parse(redoStack.pop());
+  objects = state.objects; lines = state.lines;
+  selectedObj = null; selectedLine = null;
+  redraw(); updateStatus();
+}
+
+// ── Hit testing ────────────────────────────────────────────────────────
+function hitTestObject(obj, mx, my) {
+  const s = obj.size || 1;
+  const r = (obj.type === 'goal') ? 35 * s : (obj.type === 'text') ? 30 * s : 20 * s;
+  return Math.hypot(mx - obj.x, my - obj.y) < r;
+}
+
+function hitTestLine(l, mx, my) {
+  if (l.type === 'zone') {
+    const x = Math.min(l.x1, l.x2), y = Math.min(l.y1, l.y2);
+    const w = Math.abs(l.x2 - l.x1), h = Math.abs(l.y2 - l.y1);
+    return mx >= x && mx <= x+w && my >= y && my <= y+h;
+  }
+  const dx = l.x2 - l.x1, dy = l.y2 - l.y1;
+  const len2 = dx*dx + dy*dy;
+  if (len2 === 0) return false;
+  const t = Math.max(0, Math.min(1, ((mx-l.x1)*dx + (my-l.y1)*dy) / len2));
+  const px = l.x1 + t*dx, py = l.y1 + t*dy;
+  return Math.hypot(mx-px, my-py) < 8;
+}
+
+// ── Mouse events ───────────────────────────────────────────────────────
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 2) return;
+  const pos = getCanvasPos(e);
+
+  if (currentTool === 'move') {
+    // Deselect
+    selectedObj = null; selectedLine = null;
+    // Hit test objects (top-most first)
+    for (let i = objects.length - 1; i >= 0; i--) {
+      if (hitTestObject(objects[i], pos.x, pos.y)) {
+        selectedObj = objects[i];
+        dragging = true;
+        dragStartX = pos.x - objects[i].x;
+        dragStartY = pos.y - objects[i].y;
+        saveState();
+        break;
+      }
+    }
+    if (!selectedObj) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (hitTestLine(lines[i], pos.x, pos.y)) {
+          selectedLine = lines[i];
+          dragging = true;
+          dragStartX = pos.x;
+          dragStartY = pos.y;
+          dragObjStart = { x1: lines[i].x1, y1: lines[i].y1, x2: lines[i].x2, y2: lines[i].y2 };
+          saveState();
+          break;
+        }
+      }
+    }
+    redraw(); updateStatus();
+  }
+  else if (currentTool === 'line' || currentTool === 'arrow' || currentTool === 'dribble') {
+    lineDrawing = true;
+    lineStart = pos;
+  }
+  else if (currentTool === 'zone') {
+    zoneDrawing = true;
+    zoneStart = pos;
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const pos = getCanvasPos(e);
+
+  if (dragging && selectedObj && currentTool === 'move') {
+    selectedObj.x = pos.x - dragStartX;
+    selectedObj.y = pos.y - dragStartY;
+    redraw();
+  } else if (dragging && selectedLine && currentTool === 'move') {
+    const dx = pos.x - dragStartX, dy = pos.y - dragStartY;
+    selectedLine.x1 = dragObjStart.x1 + dx;
+    selectedLine.y1 = dragObjStart.y1 + dy;
+    selectedLine.x2 = dragObjStart.x2 + dx;
+    selectedLine.y2 = dragObjStart.y2 + dy;
+    redraw();
+  } else if (lineDrawing && lineStart) {
+    redraw();
+    drawPreviewLine(pos.x, pos.y);
+  } else if (zoneDrawing && zoneStart) {
+    redraw();
+    drawPreviewZone(pos.x, pos.y);
+  }
+
+  // Cursor
+  if (currentTool === 'move') {
+    let hit = false;
+    for (const obj of objects) { if (hitTestObject(obj, pos.x, pos.y)) { hit = true; break; } }
+    if (!hit) for (const l of lines) { if (hitTestLine(l, pos.x, pos.y)) { hit = true; break; } }
+    canvas.style.cursor = hit ? 'grab' : 'default';
+  } else {
+    canvas.style.cursor = 'crosshair';
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  const pos = getCanvasPos(e);
+
+  if (dragging) {
+    dragging = false;
+    dragObjStart = null;
+  } else if (lineDrawing && lineStart) {
+    const dx = pos.x - lineStart.x, dy = pos.y - lineStart.y;
+    if (Math.hypot(dx, dy) > 10) {
+      saveState();
+      lines.push({ x1: lineStart.x, y1: lineStart.y, x2: pos.x, y2: pos.y, type: currentTool, color: currentColor, style: lineStyle, width: parseInt(lineWidth) });
+    }
+    lineDrawing = false; lineStart = null;
+    redraw(); updateStatus();
+  } else if (zoneDrawing && zoneStart) {
+    const dx = pos.x - zoneStart.x, dy = pos.y - zoneStart.y;
+    if (Math.hypot(dx, dy) > 10) {
+      saveState();
+      lines.push({ x1: zoneStart.x, y1: zoneStart.y, x2: pos.x, y2: pos.y, type: 'zone', color: currentColor, style: lineStyle, width: 2 });
+    }
+    zoneDrawing = false; zoneStart = null;
+    redraw(); updateStatus();
+  }
+});
+
+// Context menu
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+  selectedObj = null; selectedLine = null;
+  for (let i = objects.length - 1; i >= 0; i--) {
+    if (hitTestObject(objects[i], pos.x, pos.y)) { selectedObj = objects[i]; break; }
+  }
+  if (!selectedObj) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (hitTestLine(lines[i], pos.x, pos.y)) { selectedLine = lines[i]; break; }
+    }
+  }
+  if (selectedObj || selectedLine) {
+    const menu = document.getElementById('ctx-menu');
+    menu.style.left = e.clientX + 'px';
+    menu.style.top = e.clientY + 'px';
+    menu.classList.add('visible');
+  }
+  redraw();
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu')) {
+    document.getElementById('ctx-menu').classList.remove('visible');
+  }
+});
+
+// ── Place objects on click (non-move tool) ─────────────────────────────
+canvas.addEventListener('click', e => {
+  const pos = getCanvasPos(e);
+  if (['line','arrow','dribble','zone','move'].includes(currentTool)) return;
+
+  saveState();
+  if (currentTool === 'text') {
+    const txt = prompt('Enter text:');
+    if (!txt) return;
+    objects.push({ type: 'text', x: pos.x, y: pos.y, text: txt, color: currentColor, size: 1 });
+  } else {
+    objects.push({ type: currentTool, x: pos.x, y: pos.y, color: currentColor, size: 1, rotation: 0 });
+  }
+  redraw(); updateStatus();
+});
+
+// ── Toolbar buttons ────────────────────────────────────────────────────
+function setTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('#tool-move, #tool-line, #tool-arrow, #tool-dribble, #tool-text, #tool-zone').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('tool-' + tool);
+  if (btn) btn.classList.add('active');
+  const names = { move:'Move', line:'Line', arrow:'Arrow', dribble:'Dribble', text:'Text', zone:'Zone' };
+  document.getElementById('status-tool').textContent = names[tool] || tool;
+}
+
+function setObjectTool(type) {
+  currentTool = type;
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    if (b.id && b.id.startsWith('obj-') && b.id !== 'obj-ball' && b.id !== 'obj-cone' && b.id !== 'obj-goal') return;
+  });
+  const names = { 'player-a':'Place Team A', 'player-b':'Place Team B', gk:'Place GK', ball:'Place Ball', cone:'Place Cone', goal:'Place Goal' };
+  document.getElementById('status-tool').textContent = names[type] || type;
+}
+
+document.getElementById('tool-move').addEventListener('click', () => setTool('move'));
+document.getElementById('tool-line').addEventListener('click', () => setTool('line'));
+document.getElementById('tool-arrow').addEventListener('click', () => setTool('arrow'));
+document.getElementById('tool-dribble').addEventListener('click', () => setTool('dribble'));
+document.getElementById('tool-text').addEventListener('click', () => setTool('text'));
+document.getElementById('tool-zone').addEventListener('click', () => setTool('zone'));
+
+document.getElementById('obj-player-a').addEventListener('click', () => setObjectTool('player-a'));
+document.getElementById('obj-player-b').addEventListener('click', () => setObjectTool('player-b'));
+document.getElementById('obj-gk').addEventListener('click', () => setObjectTool('gk'));
+document.getElementById('obj-ball').addEventListener('click', () => setObjectTool('ball'));
+document.getElementById('obj-cone').addEventListener('click', () => setObjectTool('cone'));
+document.getElementById('obj-goal').addEventListener('click', () => setObjectTool('goal'));
+
+// Field buttons
+['full','half','thirds','blank'].forEach(f => {
+  document.getElementById('field-' + f).addEventListener('click', function() {
+    fieldType = f;
+    document.querySelectorAll('#field-full, #field-half, #field-thirds, #field-blank').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    redraw();
+  });
+});
+
+// Colors
+document.getElementById('color-strip').addEventListener('click', e => {
+  const sw = e.target.closest('.color-swatch');
+  if (!sw) return;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  sw.classList.add('active');
+  currentColor = sw.dataset.color;
+  document.getElementById('status-color').textContent = currentColor;
+  document.getElementById('status-color').style.color = currentColor === '#212121' ? '#888' : currentColor;
+  // Apply to selected
+  if (selectedObj) { selectedObj.color = currentColor; redraw(); }
+  if (selectedLine) { selectedLine.color = currentColor; redraw(); }
+});
+
+// Line controls
+document.getElementById('line-style').addEventListener('change', e => { lineStyle = e.target.value; });
+document.getElementById('line-width').addEventListener('change', e => { lineWidth = e.target.value; });
+
+// Size buttons
+document.getElementById('btn-size-up').addEventListener('click', () => changeSize(1.2));
+document.getElementById('btn-size-down').addEventListener('click', () => changeSize(0.833));
+document.getElementById('btn-rotate').addEventListener('click', () => { if (selectedObj) { saveState(); selectedObj.rotation = (selectedObj.rotation||0) + 45; redraw(); } });
+
+function changeSize(factor) {
+  if (selectedObj) { saveState(); selectedObj.size = Math.max(0.3, Math.min(4, (selectedObj.size||1) * factor)); redraw(); }
+}
+
+// Delete
+document.getElementById('btn-delete').addEventListener('click', deleteSelected);
+function deleteSelected() {
+  if (selectedObj) { saveState(); objects = objects.filter(o => o !== selectedObj); selectedObj = null; redraw(); updateStatus(); }
+  else if (selectedLine) { saveState(); lines = lines.filter(l => l !== selectedLine); selectedLine = null; redraw(); updateStatus(); }
+}
+
+// Undo/redo
+document.getElementById('btn-undo').addEventListener('click', undo);
+document.getElementById('btn-redo').addEventListener('click', redo);
+
+// Erase all
+document.getElementById('btn-erase-all').addEventListener('click', () => {
+  if (confirm('Erase all drawings?')) {
+    saveState();
+    objects = []; lines = [];
+    selectedObj = null; selectedLine = null;
+    redraw(); updateStatus();
+  }
+});
+
+// Download
+document.getElementById('btn-download-png').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'soccer-drill.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+// Context menu actions
+document.getElementById('ctx-delete').addEventListener('click', () => { deleteSelected(); document.getElementById('ctx-menu').classList.remove('visible'); });
+document.getElementById('ctx-delete2').addEventListener('click', () => { deleteSelected(); document.getElementById('ctx-menu').classList.remove('visible'); });
+document.getElementById('ctx-size-up').addEventListener('click', () => { changeSize(1.2); document.getElementById('ctx-menu').classList.remove('visible'); });
+document.getElementById('ctx-size-down').addEventListener('click', () => { changeSize(0.833); document.getElementById('ctx-menu').classList.remove('visible'); });
+document.getElementById('ctx-rotate').addEventListener('click', () => { if (selectedObj) { saveState(); selectedObj.rotation = (selectedObj.rotation||0) + 45; redraw(); } document.getElementById('ctx-menu').classList.remove('visible'); });
+['red','blue','yellow','white'].forEach(name => {
+  const colors = { red:'#e53935', blue:'#1e88e5', yellow:'#f9a825', white:'#ffffff' };
+  document.getElementById('ctx-color-' + name).addEventListener('click', () => {
+    currentColor = colors[name];
+    if (selectedObj) { selectedObj.color = currentColor; redraw(); }
+    if (selectedLine) { selectedLine.color = currentColor; redraw(); }
+    document.getElementById('ctx-menu').classList.remove('visible');
+  });
+});
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const key = e.key.toLowerCase();
+  if (e.ctrlKey && key === 'z') { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey && key === 'y') { e.preventDefault(); redo(); return; }
+  if (key === 'm') setTool('move');
+  else if (key === 'l') setTool('line');
+  else if (key === 'a') setTool('arrow');
+  else if (key === 'd') setTool('dribble');
+  else if (key === 't') setTool('text');
+  else if (key === 'z') setTool('zone');
+  else if (key === '+' || key === '=') changeSize(1.2);
+  else if (key === '-' || key === '_') changeSize(0.833);
+  else if (key === 'r') { if (selectedObj) { saveState(); selectedObj.rotation = (selectedObj.rotation||0) + 45; redraw(); } }
+  else if (key === 'delete' || key === 'backspace') deleteSelected();
+  else if (key === '1') setObjectTool('player-a');
+  else if (key === '2') setObjectTool('player-b');
+  else if (key === 'g') setObjectTool('gk');
+  else if (key === 'b') setObjectTool('ball');
+  else if (key === 'c') setObjectTool('cone');
+});
+
+// ── Status ─────────────────────────────────────────────────────────────
+function updateStatus() {
+  document.getElementById('status-count').textContent = objects.length + lines.length;
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+resizeCanvas();
+setTool('move');
+</script>
+</body>
+</html>
