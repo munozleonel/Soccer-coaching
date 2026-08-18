@@ -1,6 +1,6 @@
 {
   "version": 4,
-  "savedAt": "2026-08-16T12:20:45.374Z",
+  "savedAt": "2026-08-18T12:04:59.635Z",
   "team": {
     "teamName": "Fowler Orange",
     "squadSize": 12,
@@ -3293,6 +3293,7 @@
       "matchReport": "The most impressive game of the season showing how much the girls have progressed as individuals and as a team. Constant pressure on the opponents and swift attacks with supporting runs were rewarded with our biggest win as a Catley. \nA successful final game for a season to remember for the might Rangers.",
       "success": "- Pressure up high\n- Solid defense\n- Passing to teammates\n- Supporting runs",
       "improvements": "Rest and relax ",
+      "publishedFile": "gameweek19.html",
       "images": []
     }
   ],
